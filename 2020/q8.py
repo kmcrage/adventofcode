@@ -27,9 +27,3 @@ for err in range(len(prog)):
     else:
         print err, accumulator
         exit(0)
-
-
-
-
-
-

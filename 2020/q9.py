@@ -9,9 +9,9 @@ for idx in range(preamble, len(nums)):
     tgt = nums[idx]
     for i, n in enumerate(nums[idx - preamble:idx - 1], idx - preamble):
         m = tgt - n
-        #print idx, i, n, nums[i + 1:idx], tgt
+        # print idx, i, n, nums[i + 1:idx], tgt
         if m in nums[i + 1:idx]:
-            #print n, m, tgt
+            # print n, m, tgt
             break
     else:
         print 'invalid number', tgt

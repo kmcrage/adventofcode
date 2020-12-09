@@ -605,8 +605,6 @@ dark lime bags contain 3 posh crimson bags, 5 posh purple bags, 1 light black ba
 clear silver bags contain 3 faded olive bags, 3 drab turquoise bags, 4 drab purple bags.
 vibrant cyan bags contain 5 vibrant plum bags.'''
 
-
-
 import re
 bags = {}
 num = -1
