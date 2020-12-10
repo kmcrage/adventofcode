@@ -1,5 +1,4 @@
 #!/usr/bin/python3
-from collections import Counter
 from functools import lru_cache
 filename = 'q10.dat'
 
