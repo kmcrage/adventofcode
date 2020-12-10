@@ -7,11 +7,10 @@ def numpaths(diffs):
     if len(diffs) == 1:
         return 1
 
-    np = numpaths(diffs[1:])
-    if sum(diffs[:2]) <= 3:
-        np += numpaths(diffs[2:])
-    if sum(diffs[:3]) <= 3:
-        np += numpaths(diffs[3:])
+    np = 0
+    for lookahead in range(1, 4):
+        if sum(diffs[:lookahead]) <= 3:
+            np += numpaths(diffs[lookahead:])
 
     return np
 
