@@ -1,7 +1,4 @@
-#!/usr/bin/python
-data = '''BFFFBBFRRR
-FFFBBBFRRR
-BBFFBBFRLL'''
+#!/usr/bin/python3
 
 data = '''BFBBBBBLLR
 BBFFBBFRRL
@@ -964,8 +961,7 @@ BFFBFBBRLL
 BFBFBFFRRR
 FBBFFFBRLL'''
 
-import string
-table = string.maketrans('FBLR', '0101')
+table = data.maketrans('FBLR', '0101')
 
 high = 0
 seats = []
@@ -974,15 +970,15 @@ for bp in data.split('\n'):
     row = int(bp_bin[:-3], 2)
     col = int(bp_bin[-3:], 2)
     seat = row * 8 + col
-    print row, col, seat
+    print('row, col, seat:', row, col, seat)
     if seat > high:
         high = seat
     seats.append(seat)
 
-print 'high', high
+print('high', high)
 seats.sort()
 while seats:
     seat = seats.pop(0)
     if seat + 2 == seats[0]:
-        print 'my seat', seat + 1
+        print('my seat', seat + 1)
         break

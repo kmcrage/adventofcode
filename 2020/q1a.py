@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 nums = '''1753
 1976
 1574
@@ -200,13 +202,13 @@ nums = '''1753
 776 '''
 
 nums_list = nums.split('\n')
-print nums_list
+print(nums_list)
 nums_set = set(nums_list)
 while nums_list:
     n = nums_list.pop()
     for m in nums_list:
         p = 2020 - int(n) - int(m)
         if str(p) in nums_set:
-            print n, m, p, int(n) * int(m) * p
+            print(n, m, p, int(n) * int(m) * p)
             exit()
 

@@ -1,14 +1,5 @@
-#!/usr/bin/python
-
-data = '''light red bags contain 1 bright white bag, 2 muted yellow bags.
-dark orange bags contain 3 bright white bags, 4 muted yellow bags.
-bright white bags contain 1 shiny gold bag.
-muted yellow bags contain 2 shiny gold bags, 9 faded blue bags.
-shiny gold bags contain 1 dark olive bag, 2 vibrant plum bags.
-dark olive bags contain 3 faded blue bags, 4 dotted black bags.
-vibrant plum bags contain 5 faded blue bags, 6 dotted black bags.
-faded blue bags contain no other bags.
-dotted black bags contain no other bags.'''
+#!/usr/bin/python3
+import re
 
 data = '''wavy green bags contain 1 posh black bag, 1 faded green bag, 4 wavy red bags.
 dotted chartreuse bags contain 1 light beige bag.
@@ -605,7 +596,6 @@ dark lime bags contain 3 posh crimson bags, 5 posh purple bags, 1 light black ba
 clear silver bags contain 3 faded olive bags, 3 drab turquoise bags, 4 drab purple bags.
 vibrant cyan bags contain 5 vibrant plum bags.'''
 
-import re
 bags = {}
 num = -1
 
@@ -623,8 +613,8 @@ while len(bags) != num:
             if [b for b in sub_bags if b[1] not in bags]:
                 continue
             bags[bag] = sum([int(b[0]) * (1 + bags[b[1]]) for b in sub_bags])
-            print line, bags[bag]
+            print(line, bags[bag])
 
         if bag == 'shiny gold':
-            print bags[bag]
+            print('shiny gold bag contains', bags[bag], 'bags')
             exit(0)

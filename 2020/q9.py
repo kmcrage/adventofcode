@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 filename = 'q9.dat'
 
 with open(filename, 'r') as f:
@@ -14,7 +14,7 @@ for idx in range(preamble, len(nums)):
             # print n, m, tgt
             break
     else:
-        print 'invalid number', tgt
+        print('invalid number', tgt)
         candidates = nums
         tgt_sum = [candidates.pop(0)]
         while candidates and sum(tgt_sum) != tgt:
@@ -23,6 +23,6 @@ for idx in range(preamble, len(nums)):
             else:
                 tgt_sum.append(candidates.pop(0))
         if sum(tgt_sum) == tgt:
-            print 'range of values', tgt_sum
-            print 'min + max =', min(tgt_sum) + max(tgt_sum)
+            print('range of values', tgt_sum)
+            print('min + max =', min(tgt_sum) + max(tgt_sum))
             exit(0)

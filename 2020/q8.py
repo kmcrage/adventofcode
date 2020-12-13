@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 filename = 'q8.dat'
 
 with open(filename, 'r') as f:
@@ -25,5 +25,6 @@ for err in range(len(prog)):
         else:
             ln += 1
     else:
-        print err, accumulator
+        print('changed line:', err)
+        print('accumulator:', accumulator)
         exit(0)

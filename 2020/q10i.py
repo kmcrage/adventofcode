@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 from collections import Counter
 filename = 'q10.dat'
 
@@ -7,13 +7,13 @@ with open(filename, 'r') as f:
 
 nums.sort()
 nums = [0] + nums + [nums[-1] + 3]
-print nums
+print('transformers:', nums)
 
 diffs = []
 for i in range(1, len(nums)):
     diffs.append(nums[i] - nums[i-1])
-print diffs
+print('steps:', diffs)
 
 cnt = Counter(diffs)
-print cnt
-print cnt[1] * cnt[3]
+print(cnt)
+print('product:', cnt[1] * cnt[3])

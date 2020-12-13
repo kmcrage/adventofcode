@@ -1,16 +1,4 @@
-#!/usr/bin/python
-data = '''..##.......
-#...#...#..
-.#....#..#.
-..#.#...#.#
-.#...##..#.
-..#.##.....
-.#.#.#....#
-.#........#
-#.##...#...
-#...##....#
-.#..#...#.#'''
-
+#!/usr/bin/python3
 
 data = '''....#...#####..##.#..##..#....#
 ..##.#.#.........#.#......##...
@@ -351,6 +339,6 @@ for offset in [(1, 1), (1, 3), (1, 5), (1, 7), (2, 1)]:
             trees += 1
         coords[0] += offset[0]
         coords[1] = (coords[1] + offset[1]) % width
-    print trees
+    print('trees:', trees)
     product *= trees
-print product
+print('product:', product)

@@ -1,14 +1,5 @@
-#!/usr/bin/python
-
-data = '''light red bags contain 1 bright white bag, 2 muted yellow bags.
-dark orange bags contain 3 bright white bags, 4 muted yellow bags.
-bright white bags contain 1 shiny gold bag.
-muted yellow bags contain 2 shiny gold bags, 9 faded blue bags.
-shiny gold bags contain 1 dark olive bag, 2 vibrant plum bags.
-dark olive bags contain 3 faded blue bags, 4 dotted black bags.
-vibrant plum bags contain 5 faded blue bags, 6 dotted black bags.
-faded blue bags contain no other bags.
-dotted black bags contain no other bags.'''
+#!/usr/bin/python3
+import re
 
 data = '''wavy green bags contain 1 posh black bag, 1 faded green bag, 4 wavy red bags.
 dotted chartreuse bags contain 1 light beige bag.
@@ -606,8 +597,7 @@ clear silver bags contain 3 faded olive bags, 3 drab turquoise bags, 4 drab purp
 vibrant cyan bags contain 5 vibrant plum bags.'''
 
 
-import re
-bags = set(['shiny gold'])
+bags = {'shiny gold'}
 num = 0
 
 while len(bags) != num:
@@ -618,5 +608,4 @@ while len(bags) != num:
         for m in re.finditer(r'\d (\S+ \S+)', line):
             if m.group(1) in bags:
                 bags.add(bag)
-print 'How many bag colors can eventually contain at least one shiny gold bag?', num - 1
-
+print('How many bag colors can eventually contain at least one shiny gold bag?', num - 1)

@@ -1,4 +1,6 @@
-#!/usr/bin/python
+#!/usr/bin/python3
+import re
+
 data = '''byr:1937
 eyr:2030 pid:154364481
 hgt:158cm iyr:2015 ecl:brn hcl:#c0946f cid:155
@@ -1034,20 +1036,23 @@ byr:2008
 '''
 
 
-import re
 valid = 0
 passport = {}
 for line in data.split('\n'):
     if line == '':
-        print passport
+        print('passport', passport)
         passport.pop('cid', None)
-        if 'byr' not in passport or len(passport['byr']) != 4 or int(passport['byr']) < 1920 or int(passport['byr']) > 2002:
+        if 'byr' not in passport or len(passport['byr']) != 4 or \
+                int(passport['byr']) < 1920 or int(passport['byr']) > 2002:
             passport.pop('byr', None)
-        if 'iyr' not in passport or len(passport['iyr']) != 4 or int(passport['iyr']) < 2010 or int(passport['iyr']) > 2020:
+        if 'iyr' not in passport or len(passport['iyr']) != 4 or \
+                int(passport['iyr']) < 2010 or int(passport['iyr']) > 2020:
             passport.pop('iyr', None)
-        if 'eyr' not in passport or len(passport['eyr']) != 4 or int(passport['eyr']) < 2020 or int(passport['eyr']) > 2030:
+        if 'eyr' not in passport or len(passport['eyr']) != 4 or \
+                int(passport['eyr']) < 2020 or int(passport['eyr']) > 2030:
             passport.pop('eyr', None)
-        if ('hgt' not in passport or not re.match('^[0-9]+$', passport['hgt'][:-2]) or passport['hgt'][-2:] not in ['cm', 'in'] or
+        if ('hgt' not in passport or not re.match('^[0-9]+$', passport['hgt'][:-2]) or
+                passport['hgt'][-2:] not in ['cm', 'in'] or
                 (passport['hgt'][-2:] == 'cm' and int(passport['hgt'][:-2]) < 150) or
                 (passport['hgt'][-2:] == 'cm' and int(passport['hgt'][:-2]) > 193) or
                 (passport['hgt'][-2:] == 'in' and int(passport['hgt'][:-2]) < 59) or
@@ -1060,7 +1065,7 @@ for line in data.split('\n'):
         if 'pid' not in passport or len(passport['pid']) != 9 or not re.match('^[0-9]+$', passport['pid']):
             passport.pop('pid', None)
 
-        print passport, len(passport)
+        print(passport, len(passport))
         if len(passport) == 7:
             valid += 1
         passport = {}
@@ -1069,4 +1074,4 @@ for line in data.split('\n'):
             k, v = kv.split(':')
             passport[k] = v
 
-print valid
+print('num of valid passports:', valid)

@@ -1,21 +1,4 @@
-#!/usr/bin/python
-data = '''abc
-
-a
-b
-c
-
-ab
-ac
-
-a
-a
-a
-a
-
-b
-
-'''
+#!/usr/bin/python3
 
 data = '''cady
 ipldcyf
@@ -2151,7 +2134,7 @@ qs = None
 sum = 0
 for ans in data.split('\n'):
     if ans == '':
-        print qs, len(qs)
+        print(qs, len(qs))
         sum += len(qs)
         qs = None
     else:
@@ -2160,4 +2143,4 @@ for ans in data.split('\n'):
         else:
             qs = qs & set(list(ans))
 
-print sum
+print('sum', sum)

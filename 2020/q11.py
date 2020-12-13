@@ -47,9 +47,9 @@ while grid_next != grid:
     cnt += 1
     grid_next = grid
     grid = grid_update(grid)
-    #for l in grid:
+    # for l in grid:
     #    print(''.join(l))
-    #print()
+    # print()
 
 print('rounds', cnt)
 cells = ''

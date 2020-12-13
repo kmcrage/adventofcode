@@ -1013,7 +1013,7 @@ for entry in entries:
     #    valid += 1
     if bool(passwd[mn - 1] == letter) ^ bool(passwd[mx - 1] == letter):
         valid += 1
-print valid
+print(valid)
 
     
 
