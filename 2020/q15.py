@@ -25,11 +25,6 @@ while turn < 30000000:
     if curr not in nums:
         nums[curr] = {'count': 1, 'idx': turn}
     nums[curr]['count'] += 1
+    if turn == 2020:
+        print('turn', turn, 'num', curr)
 print('turn', turn, 'num', curr)
-
-
-
-
-
-
-
