@@ -4,10 +4,11 @@ filename = 'q16.dat'
 
 ticket = {}
 fields = {}
+errors = 0
+my_ticket = None
+
+parse_fields = True
 with open(filename, 'r') as f:
-    errors = 0
-    parse_fields = True
-    my_ticket = None
     for ln in f.readlines():
         ln = ln.rstrip()
         if ln == '':
@@ -17,9 +18,8 @@ with open(filename, 'r') as f:
         if parse_fields:
             label = ln.split(':')[0]
             valid = set()
-            ranges = re.findall(r'(\d+)-(\d+)', ln)
-            for r in ranges:
-                valid = valid.union(set(list(range(int(r[0]), int(r[1]) + 1))))
+            for r in re.findall(r'(\d+)-(\d+)', ln):
+                valid |= set(range(int(r[0]), int(r[1]) + 1))
             fields[label] = valid
 
         else:
@@ -40,14 +40,17 @@ with open(filename, 'r') as f:
 print('errors:', errors)
 print('raw ticket:', ticket)
 
-# resolve unique names
-while True:
-    resolved = [i for i in ticket if len(ticket[i]) == 1]
-    if len(resolved) == len(ticket):
-        break
+# resolve unique names: make sure this always halts
+resolved = [i for i in ticket if len(ticket[i]) == 1]
+queue = []
+while resolved:
     for i in resolved:
-        for t in [t for t in ticket if t != i]:
-            ticket[t] = ticket[t].difference(ticket[i])
+        for t in [t for t, nm in ticket.items() if len(nm) > 1]:
+            ticket[t] -= ticket[i]
+            if len(ticket[t]) == 1:
+                queue.append(t)
+    resolved = queue
+    queue = []
 
 print('ticket:', ticket)
 print('my_ticket:', my_ticket)
