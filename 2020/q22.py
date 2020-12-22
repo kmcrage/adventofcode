@@ -16,39 +16,37 @@ def part_two_win(cards_a, cards_b):
     if len(cards_a) > cards_a[0] and len(cards_b) > cards_b[0]:
         print()
         print('start subgame', cards_a[0], cards_b[0])
-        deal = {'Player 1': cards_a[1:cards_a[0] + 1],
-                'Player 2': cards_b[1:cards_b[0] + 1]}
-        result = game(deal, part_two_win)
-        return result
+        p1, p2 = game(cards_a[1:cards_a[0] + 1], cards_b[1:cards_b[0] + 1], part_two_win)
+        return len(p1) > 0
 
     result = cards_a[0] > cards_b[0]
     return result
 
 
-def game(deal, win):
+def game(player1, player2, win):
     rnd = 0
     previous = set()
-    while not [p for p in deal.keys() if len(deal[p]) == 0]:
-        key = tuple(deal['Player 1'] + [''] + deal['Player 2'])
+    while player1 and player2:
+        key = tuple(player1 + [''] + player2)
         if key in previous:
             print('loop!')
-            return True
+            return player1, player2
         previous.add(key)
 
         rnd += 1
         print('round', rnd)
 
-        if win(deal['Player 1'],  deal['Player 2']):
-            deal['Player 1'] += [deal['Player 1'].pop(0), deal['Player 2'].pop(0)]
+        if win(player1, player2):
+            player1 += [player1.pop(0), player2.pop(0)]
         else:
-            deal['Player 2'] += [deal['Player 2'].pop(0), deal['Player 1'].pop(0)]
+            player2 += [player2.pop(0), player1.pop(0)]
 
-    if deal['Player 1']:
+    if player1:
         print('Player 1 wins game')
     else:
         print('Player 2 wins game')
     print()
-    return len(deal['Player 1']) > 0
+    return player1, player2
 
 
 def deal_cards(file):
@@ -66,16 +64,13 @@ def deal_cards(file):
                 continue
 
             deal[player].append(int(line))
-    return deal
+    return deal['Player 1'], deal['Player 2']
 
 
-cards = deal_cards(filename)
-game(cards, part_two_win)
+player1, player2 = deal_cards(filename)
+player1, player2 = game(player1, player2, part_two_win)
 
 print()
 print('end of game')
-score = 0
-for p, c in cards.items():
-    print(p, 'cards:', c)
-    score += sum([s*c for s, c in enumerate(reversed(c), start=1)])
-print('score:', score)
+print('player1', sum([s*c for s, c in enumerate(reversed(player1), start=1)]), player1)
+print('player2', sum([s*c for s, c in enumerate(reversed(player2), start=1)]), player2)
