@@ -32,7 +32,7 @@ print('black tiles:', len([t for t in tiles.values() if t]))
 for day in range(1, 101):
     # which tiles need checking?
     checklist = set()
-    for p in tiles.keys():
+    for p in tiles:
         checklist.add(p)
         for m in moves.values():
             q = (p[0] + m[0], p[1] + m[1])
@@ -53,11 +53,8 @@ for day in range(1, 101):
 
     # flip the tiles
     for p, t in flips.items():
-        if p in tiles:
+        if p in tiles or t:
             tiles[p] = t
-        else:
-            if t:
-                tiles[p] = t
 
     # stats
     print('day', day, 'black tiles:', len([t for t in tiles.values() if t]))
