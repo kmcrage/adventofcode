@@ -27,7 +27,7 @@ with open(filename, 'r') as f:
         else:
             tiles[p] = True
 
-print('black tiles:', len([t for t in tiles.values() if t]))
+print('black tiles:', sum(tiles.values()))
 
 for day in range(1, 101):
     # which tiles need checking?
@@ -57,4 +57,4 @@ for day in range(1, 101):
             tiles[p] = t
 
     # stats
-    print('day', day, 'black tiles:', len([t for t in tiles.values() if t]))
+    print('day', day, 'black tiles:', sum(tiles.values()))
