@@ -1,13 +1,13 @@
 #!/usr/bin/python3
 
 
-filename = '2021-12-01.dat'
+filename = "2021-12-01.dat"
 
 
 def part_one():
     increments = 0
     last = 9999999
-    with open(filename, 'r') as f:
+    with open(filename, "r") as f:
         for line in f.readlines():
             line = line.strip()
             depth = int(line)
@@ -20,7 +20,7 @@ def part_one():
 def part_two(length=3):
     increments = 0
     last = []
-    with open(filename, 'r') as f:
+    with open(filename, "r") as f:
         for line in f.readlines():
             line = line.strip()
             depth = int(line)
