@@ -12,12 +12,9 @@ def part_one(days=18):
                 state[int(age)] += 1
 
     for day in range(days):
-        future = [0] * 9
-        future[8] += state[0]
-        future[6] += state[0]
-        for i in range(1, 9):
-            future[i - 1] += state[i]
-        state = future
+        born = state.pop(0)
+        state.append(born)
+        state[6] += born
         print(day, state, sum(state))
 
 
