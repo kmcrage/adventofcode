@@ -1,8 +1,8 @@
 #!/usr/bin/python3
-filename = 'q1.dat'
+filename = "q1.dat"
 
-with open(filename, 'r') as f:
-    nums_list = [l.rstrip() for l in f.readlines()]
+with open(filename, "r") as f:
+    nums_list = [num.rstrip() for num in f.readlines()]
 
 print(nums_list)
 nums_set = set(nums_list)
