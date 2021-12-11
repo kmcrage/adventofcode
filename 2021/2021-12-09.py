@@ -22,17 +22,18 @@ def part_one():
     risk = 0
     basins = [1, 1, 1]
     for pos, height in heightmap.items():
-        minh = 9
-        for offset in ((-1, 0), (1, 0), (0, -1), (0, 1)):
-            h = heightmap.get((pos[0] + offset[0], pos[1] + offset[1]), 9)
-            if h < minh:
-                minh = h
-        if height < minh:
-            basin = set([pos])
-            follow(heightmap, pos, basin)
-            print("pos", pos, "height", height, "basin", len(basin))
-            risk += height + 1
-            basins.append(len(basin))
+        minh = min(
+            heightmap.get((pos[0] + offset[0], pos[1] + offset[1]), 9)
+            for offset in ((-1, 0), (1, 0), (0, -1), (0, 1))
+        )
+        if height >= minh:
+            continue
+
+        basin = set([pos])
+        follow(heightmap, pos, basin)
+        print("pos", pos, "height", height, "basin", len(basin))
+        risk += height + 1
+        basins.append(len(basin))
 
     basins.sort(reverse=True)
     print("risk", risk)
