@@ -36,12 +36,7 @@ def part_all():
             print("after ", dir, "=", fold, "num dots:", len(dots))
 
         print()
-        size = [0, 0]
-        for pos in dots:
-            for i in [0, 1]:
-                if pos[i] > size[i]:
-                    size[i] = pos[i]
-
+        size = [max(c) for c in zip(*dots)]
         for j in range(size[1] + 1):
             for i in range(size[0] + 1):
                 print("#" if (i, j) in dots else " ", end="")
