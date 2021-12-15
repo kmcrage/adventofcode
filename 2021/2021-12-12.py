@@ -35,9 +35,12 @@ def move(path, caves, part=1):
         if dst == "start":
             continue
 
-        if dst == dst.lower() and dst in counter:
-            if part == 1 or repeat_small:
-                continue
+        if (
+            dst == dst.lower()
+            and dst in counter
+            and (part == 1 or repeat_small)
+        ):
+            continue
 
         routes += move(path + [dst], caves, part=part)
     return routes

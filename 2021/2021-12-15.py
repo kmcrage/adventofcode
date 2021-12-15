@@ -44,7 +44,7 @@ def dijkstra(risks, end):
     result = {(0, 0): 0}
     # candidates = [(risk, pos), ...] which we keep sorted
     candidates = [(0, (0, 0))]
-    while len(visited) < len(risks):
+    while end not in visited:
         pos = heapq.heappop(candidates)[1]
         if pos in visited:
             continue
@@ -58,8 +58,6 @@ def dijkstra(risks, end):
                 heapq.heappush(candidates, (risk, nghbr))
 
         visited.add(pos)
-        if pos == end:
-            break
 
     print("result:", result[end], "(visited:", len(visited), ")")
 
