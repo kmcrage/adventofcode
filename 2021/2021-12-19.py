@@ -79,7 +79,20 @@ def parse():
     return beacons_all
 
 
+def get_fingerprints(beacons_all):
+    fingerprints = []
+    for scanner, beacons in enumerate(beacons_all):
+        fingerprints.append(set())
+        for a in beacons:
+            for b in beacons:
+                fingerprint = tuple(sorted(abs(a[i] - b[i]) for i in [0, 1, 2]))
+                fingerprints[-1].add(fingerprint)
+    return fingerprints
+
+
 beacons_all = parse()
+# fingerprint: sorted abs distances
+fingerprints = get_fingerprints(beacons_all)
 # scanner: pos, perm, signs
 scanners_known = {0: ([0, 0, 0], beacons_all[0])}
 tested_pairs = set()
@@ -93,6 +106,15 @@ while len(scanners_known) < len(beacons_all):
             if pair in tested_pairs:
                 continue
             tested_pairs.add(pair)
+
+            # fast tests of magnitude only, no orientation checks
+            if (
+                len(fingerprints[scanner].intersection(fingerprints[scanner_known]))
+                < 66
+            ):
+                continue
+
+            # slow orientation checks
             if orient_scanner(scanner, scanners_known, scanner_known_info, beacons_all):
                 break
 
