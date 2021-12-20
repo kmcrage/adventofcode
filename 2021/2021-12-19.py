@@ -36,7 +36,7 @@ def test_match(
 #
 # This could be much faster with tests at every choice of sign
 #
-def orient_scanner(scanner, scanners_known, scanner_known_info, beacons_all):
+def orient_scanner(scanner_known_info, beacons):
     scanner_known_pos, beacons_known = scanner_known_info
     for orient in permutations([0, 1, 2]):
         for xsgn in [-1, 1]:
@@ -48,7 +48,7 @@ def orient_scanner(scanner, scanners_known, scanner_known_info, beacons_all):
                             ysgn * beacon[orient[1]],
                             zsgn * beacon[orient[2]],
                         ]
-                        for beacon in beacons_all[scanner]
+                        for beacon in beacons
                     ]
                     for beacon in beacons_std:
                         for known in beacons_known:
@@ -97,7 +97,7 @@ fingerprints = get_fingerprints(beacons_all)
 scanners_known = {0: ([0, 0, 0], beacons_all[0])}
 tested_pairs = set()
 while len(scanners_known) < len(beacons_all):
-    for scanner, _ in enumerate(beacons_all):
+    for scanner, beacons in enumerate(beacons_all):
         if scanner in scanners_known:
             continue
 
@@ -115,7 +115,7 @@ while len(scanners_known) < len(beacons_all):
                 continue
 
             # slow orientation checks
-            if orient_scanner(scanner, scanners_known, scanner_known_info, beacons_all):
+            if orient_scanner(scanner_known_info, beacons):
                 break
 
 beacons_all = set()
