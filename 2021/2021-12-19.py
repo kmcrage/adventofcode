@@ -33,34 +33,11 @@ def test_match(
             return True
 
 
-def test_match_old(
-    pos_scanner, scanner_known, scanner_known_pos, beacons_std, beacons_known
-):
-    matches = 0
-
-    for test_std in beacons_std:
-        for test_known in beacons_known:
-            if all(test_known[i] == pos_scanner[i] + test_std[i] for i in [0, 1, 2]):
-                matches += 1
-            if matches >= 12:
-                print(
-                    "matched",
-                    scanner,
-                    scanner_known,
-                    pos_scanner,
-                )
-                scanners_known[scanner] = (pos_scanner, [])
-                for b in beacons_std:
-                    scanners_known[scanner][1].append(
-                        tuple(pos_scanner[i] + b[i] for i in [0, 1, 2])
-                    )
-                return True
-
-
 #
 # This could be much faster with tests at every choice of sign
 #
-def orient_scanner(scanner, scanners_known, beacons_all):
+def orient_scanner(scanner, scanners_known, scanner_known_info, beacons_all):
+    scanner_known_pos, beacons_known = scanner_known_info
     for orient in permutations([0, 1, 2]):
         for xsgn in [-1, 1]:
             for ysgn in [-1, 1]:
@@ -74,18 +51,17 @@ def orient_scanner(scanner, scanners_known, beacons_all):
                         for beacon in beacons_all[scanner]
                     ]
                     for beacon in beacons_std:
-                        for scanner_known, scanner_known_info in scanners_known.items():
-                            scanner_known_pos, beacons_known = scanner_known_info
-                            for known in beacons_known:
-                                pos_scanner = [known[i] - beacon[i] for i in [0, 1, 2]]
-                                if test_match(
-                                    pos_scanner,
-                                    scanner_known,
-                                    scanner_known_pos,
-                                    beacons_std,
-                                    beacons_known,
-                                ):
-                                    return
+                        for known in beacons_known:
+                            pos_scanner = [known[i] - beacon[i] for i in [0, 1, 2]]
+                            if test_match(
+                                pos_scanner,
+                                scanner_known,
+                                scanner_known_pos,
+                                beacons_std,
+                                beacons_known,
+                            ):
+                                return True
+    return False
 
 
 def parse():
@@ -106,13 +82,19 @@ def parse():
 beacons_all = parse()
 # scanner: pos, perm, signs
 scanners_known = {0: ([0, 0, 0], beacons_all[0])}
+tested_pairs = set()
 while len(scanners_known) < len(beacons_all):
     for scanner, _ in enumerate(beacons_all):
         if scanner in scanners_known:
             continue
 
-        positions = {}
-        orient_scanner(scanner, scanners_known, beacons_all)
+        for scanner_known, scanner_known_info in scanners_known.items():
+            pair = (scanner, scanner_known)
+            if pair in tested_pairs:
+                continue
+            tested_pairs.add(pair)
+            if orient_scanner(scanner, scanners_known, scanner_known_info, beacons_all):
+                break
 
 beacons_all = set()
 for scanner, beacons in scanners_known.items():
