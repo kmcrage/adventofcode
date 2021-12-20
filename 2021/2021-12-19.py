@@ -5,9 +5,7 @@ from itertools import permutations
 filename = "2021-12-19.dat"
 
 
-def test_match(
-    pos_scanner, scanner_known, scanner_known_pos, beacons_std, beacons_known
-):
+def test_match(pos_scanner, scanner_known, beacons_std, beacons_known):
     beacons_std_set = {
         tuple(pos_scanner[i] + test_std[i] for i in [0, 1, 2])
         for test_std in beacons_std
@@ -36,8 +34,7 @@ def test_match(
 #
 # This could be much faster with tests at every choice of sign
 #
-def orient_scanner(scanner_known_info, beacons):
-    scanner_known_pos, beacons_known = scanner_known_info
+def orient_scanner(beacons_known, beacons):
     for orient in permutations([0, 1, 2]):
         for xsgn in [-1, 1]:
             for ysgn in [-1, 1]:
@@ -56,7 +53,6 @@ def orient_scanner(scanner_known_info, beacons):
                             if test_match(
                                 pos_scanner,
                                 scanner_known,
-                                scanner_known_pos,
                                 beacons_std,
                                 beacons_known,
                             ):
@@ -81,7 +77,7 @@ def parse():
 
 def get_fingerprints(beacons_all):
     fingerprints = []
-    for scanner, beacons in enumerate(beacons_all):
+    for beacons in beacons_all:
         fingerprints.append(set())
         for a in beacons:
             for b in beacons:
@@ -115,7 +111,7 @@ while len(scanners_known) < len(beacons_all):
                 continue
 
             # slow orientation checks
-            if orient_scanner(scanner_known_info, beacons):
+            if orient_scanner(scanner_known_info[1], beacons):
                 break
 
 beacons_all = set()
