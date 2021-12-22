@@ -31,7 +31,7 @@ def part_one():
                             cubes.add(cube)
                         elif cube in cubes:
                             cubes.remove(cube)
-    print(len(cubes))
+    print("basic part one:", len(cubes))
 
 
 def parse():
@@ -56,7 +56,12 @@ def cube_size(cube):
 
 # everything needs to be tuples for this to work
 @functools.lru_cache(maxsize=None)
-def count(cube, cubes):
+def count(cube, cubes, init=False):
+    if init:
+        cube = [[max(cube[n][0], -50), min(cube[n][1], 50)] for n in range(3)]
+        if any(cube[n][0] > cube[n][1] for n in range(3)):
+            return 0
+
     cnt = cube_size(cube)
 
     for i, intersect in enumerate(cubes, 1):
@@ -72,10 +77,18 @@ def count(cube, cubes):
 
         if any(subregion[n][0] > subregion[n][1] for n in range(3)):
             continue
-        cnt -= count(subregion, cubes[i:])
+        cnt -= count(subregion, cubes[i:], init=init)
     return cnt
 
 
+part_one()
+
 cubes = parse()
+init = sum(
+    count(cube, cubes[c:], init=True)
+    for c, cube in enumerate(cubes, 1)
+    if cube[3] != "off"
+)
+print("init", init)
 cnt = sum(count(cube, cubes[c:]) for c, cube in enumerate(cubes, 1) if cube[3] != "off")
 print("count", cnt)
