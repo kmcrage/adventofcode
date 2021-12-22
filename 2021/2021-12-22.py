@@ -1,0 +1,81 @@
+#!/usr/bin/python3
+
+import functools
+
+filename = "2021-12-22.dat"
+
+
+def part_one():
+    init = [(-50, 50), (-50, 50), (-50, 50)]
+    cubes = set()
+    with open(filename, "r") as f:
+        for line in f.readlines():
+            state, vol = line.strip().split()
+            volume = [
+                v.replace("=", " ").replace(".", " ").split() for v in vol.split(",")
+            ]
+            for i in range(
+                max(int(volume[0][1]), init[0][0]),
+                min(int(volume[0][2]), init[0][1]) + 1,
+            ):
+                for j in range(
+                    max(int(volume[1][1]), init[1][0]),
+                    min(int(volume[1][2]), init[1][1]) + 1,
+                ):
+                    for k in range(
+                        max(int(volume[2][1]), init[2][0]),
+                        min(int(volume[2][2]), init[2][1]) + 1,
+                    ):
+                        cube = (i, j, k)
+                        if state == "on":
+                            cubes.add(cube)
+                        elif cube in cubes:
+                            cubes.remove(cube)
+    print(len(cubes))
+
+
+def parse():
+    cubes = []
+    with open(filename, "r") as f:
+        for line in f.readlines():
+            state, vol = line.strip().split()
+            volume = [
+                v.replace("=", " ").replace(".", " ").split() for v in vol.split(",")
+            ]
+            cube = tuple([tuple([int(v[1]), int(v[2])]) for v in volume] + [state])
+            cubes.append(cube)
+    return tuple(cubes)
+
+
+def cube_size(cube):
+    cnt = 1
+    for i in range(3):
+        cnt *= cube[i][1] - cube[i][0] + 1
+    return cnt
+
+
+# everything needs to be tuples for this to work
+@functools.lru_cache(maxsize=None)
+def count(cube, cubes):
+    cnt = cube_size(cube)
+
+    for i, intersect in enumerate(cubes, 1):
+        subregion = tuple(
+            tuple(
+                [
+                    max(cube[n][0], intersect[n][0]),
+                    min(cube[n][1], intersect[n][1]),
+                ]
+            )
+            for n in range(3)
+        )
+
+        if any(subregion[n][0] > subregion[n][1] for n in range(3)):
+            continue
+        cnt -= count(subregion, cubes[i:])
+    return cnt
+
+
+cubes = parse()
+cnt = sum(count(cube, cubes[c:]) for c, cube in enumerate(cubes, 1) if cube[3] != "off")
+print("count", cnt)
