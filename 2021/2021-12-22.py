@@ -42,7 +42,7 @@ def parse():
             volume = [
                 v.replace("=", " ").replace(".", " ").split() for v in vol.split(",")
             ]
-            cube = tuple([tuple([int(v[1]), int(v[2])]) for v in volume] + [state])
+            cube = tuple([tuple(int(u) for u in v[1:]) for v in volume] + [state])
             cubes.append(cube)
     return tuple(cubes)
 
@@ -54,26 +54,30 @@ def cube_size(cube):
     return cnt
 
 
+def intersection(cube_a, cube_b):
+    return tuple(
+        tuple(
+            [
+                max(cube_a[n][0], cube_b[n][0]),
+                min(cube_a[n][1], cube_b[n][1]),
+            ]
+        )
+        for n in range(3)
+    )
+
+
 # everything needs to be tuples for this to work
 @functools.lru_cache(maxsize=None)
 def count(cube, cubes, init=False):
     if init:
-        cube = [[max(cube[n][0], -50), min(cube[n][1], 50)] for n in range(3)]
+        cube = intersection(cube, [(-50, 50)] * 3)
         if any(cube[n][0] > cube[n][1] for n in range(3)):
             return 0
 
     cnt = cube_size(cube)
 
     for i, intersect in enumerate(cubes, 1):
-        subregion = tuple(
-            tuple(
-                [
-                    max(cube[n][0], intersect[n][0]),
-                    min(cube[n][1], intersect[n][1]),
-                ]
-            )
-            for n in range(3)
-        )
+        subregion = intersection(cube, intersect)
 
         if any(subregion[n][0] > subregion[n][1] for n in range(3)):
             continue
