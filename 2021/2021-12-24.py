@@ -37,6 +37,7 @@ def solve(solutions):
 
 
 def output(solutions, fn):
+    print(fn.__str__().split()[-1], end=" ")
     w_z = fn(solutions[-1].keys())
     for solution in solutions[:0:-1]:
         print(w_z[0], end="")
@@ -51,10 +52,6 @@ def output(solutions, fn):
 solutions = [{(0, 0): []}]
 solve(solutions)
 
-# output max
-print("max: ", end="")
 output(solutions, max)
 
-# output min
-print("min: ", end="")
 output(solutions, min)
