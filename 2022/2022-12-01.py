@@ -1,14 +1,14 @@
 #!/usr/bin/python3
 import bisect
 
-DATA = "2022-12-01.dat"
-# DATA = "test.dat"
+filename = "2022-12-01.dat"
+# filename = "test.dat"
 
 
-def elf_order():
+def elf_order(filename):
     elves = []
     elf_total = 0
-    with open(DATA, "r") as f:
+    with open(filename, "r") as f:
         for line in f.readlines():
             line = line.strip()
 
@@ -23,7 +23,7 @@ def elf_order():
     return elves
 
 
-sorted_elves = elf_order()
+sorted_elves = elf_order(filename)
 
 print("part one, max:", sorted_elves[-1])
 print("part two, sum:", sum(sorted_elves[-3:]))
