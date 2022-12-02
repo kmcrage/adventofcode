@@ -22,17 +22,17 @@ def part_one(filename):
 
 def part_two(filename):
     game = {
-        "X": {"result": {"A": 3, "B": 1, "C": 2}, "score": 0},
-        "Y": {"result": {"A": 1, "B": 2, "C": 3}, "score": 3},
-        "Z": {"result": {"A": 2, "B": 3, "C": 1}, "score": 6},
+        "X": {"score": {"A": 3, "B": 1, "C": 2}, "result": 0},
+        "Y": {"score": {"A": 1, "B": 2, "C": 3}, "result": 3},
+        "Z": {"score": {"A": 2, "B": 3, "C": 1}, "result": 6},
     }
 
     score = 0
     with open(filename, "r") as f:
         for line in f.readlines():
             tokens = line.split()
-            score += game[tokens[1]]["score"]
-            score += game[tokens[1]]["result"][tokens[0]]
+            score += game[tokens[1]]["result"]
+            score += game[tokens[1]]["score"][tokens[0]]
     print("part two score:", score)
 
 
