@@ -13,7 +13,7 @@ def part_one(filename):
 
     score = 0
     with open(filename, "r") as f:
-        for line in f.readlines():
+        for line in f:
             tokens = line.split()
             score += game[tokens[1]]["score"]
             score += game[tokens[1]]["result"][tokens[0]]
@@ -29,7 +29,7 @@ def part_two(filename):
 
     score = 0
     with open(filename, "r") as f:
-        for line in f.readlines():
+        for line in f:
             tokens = line.split()
             score += game[tokens[1]]["result"]
             score += game[tokens[1]]["score"][tokens[0]]
