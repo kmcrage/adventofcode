@@ -12,7 +12,7 @@ def processed(filename, marker):
                 if len(set(line[i : i + marker])) == marker:
                     result = i + marker
                     break
-    print(f"signal length {marker}, processed {result}")
+            print(f"signal length {marker}, processed {result}")
 
 
 processed(data_filename, 4)
