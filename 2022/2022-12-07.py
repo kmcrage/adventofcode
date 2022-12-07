@@ -3,12 +3,14 @@
 data_filename = "2022-12-07.dat"
 # data_filename = "test.dat"
 
+def cdup(cwd):
+    return "/".join(cwd.split("/")[:-1])
+
 
 def parser(filename):
     filesystem = {}
     cwd = None
     with open(filename, "r") as f:
-        # parse
         for line in f:
             # print(line)
             tokens = line.split()
@@ -18,9 +20,10 @@ def parser(filename):
                 if tokens[2] == "/":
                     cwd = "/"
                 elif tokens[2] == "..":
-                    cwd = "/".join(cwd.split("/")[:-1])
+                    cwd = cdup(cwd)
                 else:
                     cwd += f"/{tokens[2]}"
+
                 if cwd not in filesystem:
                     filesystem[cwd] = 0
 
@@ -29,7 +32,8 @@ def parser(filename):
                 dr = cwd
                 while dr:
                     filesystem[dr] += int(tokens[0])
-                    dr = "/".join(dr.split("/")[:-1])
+                    dr = cdup(dr)
+
     return filesystem
 
 
