@@ -3,13 +3,10 @@
 data_filename = "2022-12-07.dat"
 # data_filename = "test.dat"
 
-def cdup(cwd):
-    return "/".join(cwd.split("/")[:-1])
-
 
 def parser(filename):
     filesystem = {}
-    cwd = None
+    cwd = []
     with open(filename, "r") as f:
         for line in f:
             # print(line)
@@ -18,22 +15,24 @@ def parser(filename):
             # navigate
             if tokens[1] == "cd":
                 if tokens[2] == "/":
-                    cwd = "/"
+                    cwd = []
                 elif tokens[2] == "..":
-                    cwd = cdup(cwd)
+                    cwd.pop()
                 else:
-                    cwd += f"/{tokens[2]}"
-
-                if cwd not in filesystem:
-                    filesystem[cwd] = 0
+                    cwd.append(tokens[2])
 
             # file sizes
             elif tokens[0] not in ("$", "dir"):
-                dr = cwd
-                while dr:
-                    filesystem[dr] += int(tokens[0])
-                    dr = cdup(dr)
+                dr = cwd.copy()
+                while True:
+                    path = "/".join(dr)
+                    if path not in filesystem:
+                        filesystem[path] = 0
+                    filesystem[path] += int(tokens[0])
 
+                    if not dr:
+                        break
+                    dr.pop()
     return filesystem
 
 
@@ -43,7 +42,7 @@ def part_one(filesystem, max_size):
 
 
 def part_two(filesystem, total, target):
-    removal = target + filesystem["/"] - total
+    removal = target + filesystem[""] - total
     # print(f"remove: {removal}")
     min_removal = total
     for s in filesystem.values():
