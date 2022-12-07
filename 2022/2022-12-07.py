@@ -43,11 +43,7 @@ def part_one(filesystem, max_size):
 
 def part_two(filesystem, total, target):
     removal = target + filesystem[""] - total
-    # print(f"remove: {removal}")
-    min_removal = total
-    for s in filesystem.values():
-        if s < min_removal and s >= removal:
-            min_removal = s
+    min_removal = min(s for s in filesystem.values() if s >= removal)
     print(f"part two, minimal removal: {min_removal}")
 
 
