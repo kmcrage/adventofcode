@@ -38,13 +38,13 @@ def part_two(trees):
             if pos not in trees:
                 continue
 
-            num = 1
+            num = 0 # count the number of non-blocking trees
             while pos in trees and trees[pos] < trees[tree]:
                 pos = (pos[0] + dirn[0], pos[1] + dirn[1])
                 num += 1
 
-            if pos not in trees:
-                num -= 1
+            if pos in trees:
+                num += 1 # add in the blocking tree
 
             if tree not in areas:
                 areas[tree] = 1
