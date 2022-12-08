@@ -31,9 +31,10 @@ def part_one(trees):
 
 
 def part_two(trees):
-    areas = {}
-    for dirn in ((1, 0), (-1, 0), (0, 1), (0, -1)):
-        for tree in trees:
+    max_area = 0
+    for tree in trees:
+        area = 1
+        for dirn in ((1, 0), (-1, 0), (0, 1), (0, -1)):
             pos = (tree[0] + dirn[0], tree[1] + dirn[1])
             if pos not in trees:
                 continue
@@ -46,11 +47,11 @@ def part_two(trees):
             if pos in trees:
                 num += 1 # add in the blocking tree
 
-            if tree not in areas:
-                areas[tree] = 1
-            areas[tree] *= num
+            area *= num
+        if area > max_area:
+            max_area = area
 
-    print("Max Area:", max(areas.values()))
+    print(f"Max Area: {max_area}")
 
 
 trees = parser(data_filename)
