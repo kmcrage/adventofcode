@@ -6,8 +6,8 @@ data_filename = "2022-12-07.dat"
 
 def parser(filename):
     filesystem = {}
-    cwd = []
     with open(filename, "r") as f:
+        cwd = None
         for line in f:
             # print(line)
             tokens = line.split()
@@ -15,7 +15,7 @@ def parser(filename):
             # navigate
             if tokens[1] == "cd":
                 if tokens[2] == "/":
-                    cwd = []
+                    cwd = ['']
                 elif tokens[2] == "..":
                     cwd.pop()
                 else:
@@ -24,14 +24,12 @@ def parser(filename):
             # file sizes
             elif tokens[0] not in ("$", "dir"):
                 dr = cwd.copy()
-                while True:
+                while dr:
                     path = "/".join(dr)
                     if path not in filesystem:
                         filesystem[path] = 0
                     filesystem[path] += int(tokens[0])
 
-                    if not dr:
-                        break
                     dr.pop()
     return filesystem
 
