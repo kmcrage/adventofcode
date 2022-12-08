@@ -9,7 +9,7 @@ def elf_order(filename):
     elves = []
     elf_total = 0
     with open(filename, "r") as f:
-        for line in f.readlines():
+        for line in f:
             line = line.strip()
 
             if line == "":
