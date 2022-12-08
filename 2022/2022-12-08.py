@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 data_filename = "2022-12-08.dat"
-#data_filename = "test.dat"
+# data_filename = "test.dat"
 
 
 def parser(filename):
@@ -14,20 +14,18 @@ def parser(filename):
 
 
 def part_one(trees):
-    visible = set()
-    for dirn in ((1, 0), (-1, 0), (0, 1), (0, -1)):
-        for tree in trees:
-            if tree in visible:
-                continue
-            
+    visible = 0
+    for tree in trees:
+        for dirn in ((1, 0), (-1, 0), (0, 1), (0, -1)):
             pos = (tree[0] + dirn[0], tree[1] + dirn[1])
             while pos in trees and trees[pos] < trees[tree]:
                 pos = (pos[0] + dirn[0], pos[1] + dirn[1])
 
             if pos not in trees:
-                visible.add(tree)
+                visible += 1
+                break
 
-    print("Visible:", len(visible))
+    print(f"Visible: {visible}")
 
 
 def part_two(trees):
@@ -39,13 +37,13 @@ def part_two(trees):
             if pos not in trees:
                 continue
 
-            num = 0 # count the number of non-blocking trees
+            num = 0  # count the number of non-blocking trees
             while pos in trees and trees[pos] < trees[tree]:
                 pos = (pos[0] + dirn[0], pos[1] + dirn[1])
                 num += 1
 
             if pos in trees:
-                num += 1 # add in the blocking tree
+                num += 1  # add in the blocking tree
 
             area *= num
         if area > max_area:
