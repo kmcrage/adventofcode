@@ -1,10 +1,13 @@
 #!/usr/bin/python3
-import math
 
 data_filename = "2022-12-09.dat"
 # data_filename = "test.dat"
 
 DIRNS = {"R": (1, 0), "L": (-1, 0), "U": (0, 1), "D": (0, -1)}
+
+
+def sign(num):
+    return (num > 0) - (num < 0)
 
 
 def part_one(filename):
@@ -19,12 +22,12 @@ def part_one(filename):
                 h_pos = [h_pos[0] + DIRNS[dirn][0], h_pos[1] + DIRNS[dirn][1]]
 
                 if abs(h_pos[0] - t_pos[0]) + abs(h_pos[1] - t_pos[1]) > 2:
-                    t_pos[0] += math.copysign(1, h_pos[0] - t_pos[0])
-                    t_pos[1] += math.copysign(1, h_pos[1] - t_pos[1])
+                    t_pos[0] += sign(h_pos[0] - t_pos[0])
+                    t_pos[1] += sign(h_pos[1] - t_pos[1])
                 elif abs(h_pos[0] - t_pos[0]) == 2:
-                    t_pos[0] += math.copysign(1, h_pos[0] - t_pos[0])
+                    t_pos[0] += sign(h_pos[0] - t_pos[0])
                 elif abs(h_pos[1] - t_pos[1]) == 2:
-                    t_pos[1] += math.copysign(1, h_pos[1] - t_pos[1])
+                    t_pos[1] += sign(h_pos[1] - t_pos[1])
 
                 locations.add(tuple(t_pos))
 
@@ -50,12 +53,12 @@ def part_two(filename, knots):
                         + abs(pos[num - 1][1] - pos[num][1])
                         > 2
                     ):
-                        pos[num][0] += math.copysign(1, pos[num - 1][0] - pos[num][0])
-                        pos[num][1] += math.copysign(1, pos[num - 1][1] - pos[num][1])
+                        pos[num][0] += sign(pos[num - 1][0] - pos[num][0])
+                        pos[num][1] += sign(pos[num - 1][1] - pos[num][1])
                     elif abs(pos[num - 1][0] - pos[num][0]) == 2:
-                        pos[num][0] += math.copysign(1, pos[num - 1][0] - pos[num][0])
+                        pos[num][0] += sign(pos[num - 1][0] - pos[num][0])
                     elif abs(pos[num - 1][1] - pos[num][1]) == 2:
-                        pos[num][1] += math.copysign(1, pos[num - 1][1] - pos[num][1])
+                        pos[num][1] += sign(pos[num - 1][1] - pos[num][1])
 
                 # track the location of the last knot
                 locations.add(tuple(pos[-1]))
