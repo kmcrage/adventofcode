@@ -8,24 +8,24 @@ data_filename = "2022-12-13.dat"
 def compare(packet_left, packet_right):
     # print('cmp', packet_left, packet_right)
     for left, right in zip(packet_left, packet_right):
-        # print("cmp", left, right)
+        result = 0
         if isinstance(left, int) and isinstance(right, int):
             if left != right:
-                return 1 if left < right else -1
+                result = 1 if left < right else -1
         elif isinstance(left, list) and isinstance(right, list):
             result = compare(left, right)
-            if result is not None:
-                return result
         elif isinstance(left, list):
             result = compare(left, [right])
-            if result is not None:
-                return result
         else:
             result = compare([left], right)
-            if result is not None:
-                return result
+
+        if result != 0:
+            return result
+
     if len(packet_left) != len(packet_right):
         return 1 if len(packet_left) < len(packet_right) else -1
+    
+    return 0
 
 
 def part_one(filename):
@@ -41,7 +41,7 @@ def part_one(filename):
             packets.append(eval(line))
             if len(packets) != 2:
                 continue
-            
+
             pair_num += 1
             if compare(packets[0], packets[1]) != -1:
                 # print("correct", pair_num)
