@@ -10,10 +10,8 @@ def compare(packet_left, packet_right):
     for left, right in zip(packet_left, packet_right):
         # print("cmp", left, right)
         if isinstance(left, int) and isinstance(right, int):
-            if left == right:
-                continue
-            # print('true?', left < right)
-            return 1 if left < right else -1
+            if left != right:
+                return 1 if left < right else -1
         elif isinstance(left, list) and isinstance(right, list):
             result = compare(left, right)
             if result is not None:
@@ -35,18 +33,20 @@ def part_one(filename):
     packets = []
     with open(filename, "r") as f:
         pair_num = 0
-        left = None
-        right = None
         for line in f:
             line = line.strip()
             if not line:
-                pair_num += 1
-                if compare(packets[0], packets[1]) != -1:
-                    # print("correct", pair_num)
-                    result += pair_num
-                packets = []
-            else:
-                packets.append(eval(line))
+                continue
+
+            packets.append(eval(line))
+            if len(packets) != 2:
+                continue
+            
+            pair_num += 1
+            if compare(packets[0], packets[1]) != -1:
+                # print("correct", pair_num)
+                result += pair_num
+            packets = []
 
     print("part_one:", result)
 
@@ -66,8 +66,7 @@ def part_two(filename):
     for p, packet in enumerate(packets, 1):
         if packet in signals:
             product *= p
-    print(f'product: {product}')
-
+    print(f"product: {product}")
 
 
 part_one(data_filename)
