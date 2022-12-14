@@ -31,7 +31,7 @@ def pour_sand(sand, start):
         for new_pos in (
             (pos[0], pos[1] + 1),
             (pos[0] - 1, pos[1] + 1),
-            (pos[0] + 1, pos[1] + 1)
+            (pos[0] + 1, pos[1] + 1),
         ):
             if new_pos not in sand:
                 pos = new_pos
@@ -42,17 +42,18 @@ def pour_sand(sand, start):
             pos = start
     print("grains:", grains)
 
+
 def add_floor(sand):
     floor_depth = max(s[1] for s in sand) + 2
-    sand_min = min(s[0] for s in sand) - floor_depth
-    sand_max = max(s[0] for s in sand) + floor_depth
-    for x in range(sand_min, sand_max ):
+    sand_min = min(s[0] for s in sand) - floor_depth - 2
+    sand_max = max(s[0] for s in sand) + floor_depth + 2
+    for x in range(sand_min, sand_max):
         sand.add((x, floor_depth))
-    
+
+
 sand = parser(data_filename)
-print('no floor ', end='')
+print("no floor ", end="")
 pour_sand(sand.copy(), (500, 0))
-print('add floor ', end='')
+print("add floor ", end="")
 add_floor(sand)
 pour_sand(sand.copy(), (500, 0))
-
