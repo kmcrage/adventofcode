@@ -31,15 +31,15 @@ def pour_sand(sand, start):
         for new_pos in (
             (pos[0], pos[1] + 1),
             (pos[0] - 1, pos[1] + 1),
-            (pos[0] + 1, pos[1] + 1),
-            start,
+            (pos[0] + 1, pos[1] + 1)
         ):
             if new_pos not in sand:
-                if new_pos == start:
-                    sand.add(pos)
-                    grains += 1
                 pos = new_pos
                 break
+        else:
+            sand.add(pos)
+            grains += 1
+            pos = start
     print("grains:", grains)
 
 def add_floor(sand):
