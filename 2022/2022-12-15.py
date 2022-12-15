@@ -1,5 +1,7 @@
 #!/usr/bin/python3
+import itertools
 import re
+
 
 data_filename = "2022-12-15.dat"
 # data_filename = "test.dat"
@@ -24,7 +26,7 @@ def part_one(filename, row):
                 if x not in scan_row:
                     scan_row[x] = "#"
     result = len([s for s in scan_row if scan_row[s] == "#"])
-    print(f"positions {result}")
+    print(f"part one positions {result}")
 
 
 def circle(disk, maxsize):
@@ -49,7 +51,6 @@ def detected(pos, disk):
 
 def parser(filename):
     disks = []
-    print("parse")
     with open(filename, "r") as f:
         for line in f:
             m = re.search(r"x=(-?\d+), y=(-?\d+).*x=(-?\d+), y=(-?\d+)", line)
@@ -85,11 +86,62 @@ def solver(disks, maxsize):
             tested[pos] = True
 
 
-def part_two(filename, maxsize):
-    disks = parser(filename)
+def perimeters_bf(disks, maxsize):
     result = solver(disks, maxsize)
-    print("frequency:", result[0] * 4_000_000 + result[1])
+    print(f"position: {result}")
+    print("part two frequency:", result[0] * 4_000_000 + result[1])
+
+
+def intersections(disks, maxsize):
+    results = set()
+    for disk_a, disk_b in itertools.combinations(disks, 2):
+        disk_a_skew = (disk_a[0][0] + disk_a[0][1], disk_a[0][0] - disk_a[0][1])
+        disk_b_skew = (disk_b[0][0] + disk_b[0][1], disk_b[0][0] - disk_b[0][1])
+        for candidate_skew in (
+            (
+                max(disk_a_skew[0] - disk_a[1] - 1, disk_b_skew[0] - disk_b[1] - 1),
+                max(disk_a_skew[1] - disk_a[1] - 1, disk_b_skew[1] - disk_b[1] - 1),
+            ),
+            (
+                max(disk_a_skew[0] - disk_a[1] - 1, disk_b_skew[0] - disk_b[1] - 1),
+                min(disk_a_skew[1] + disk_a[1] + 1, disk_b_skew[1] + disk_b[1] + 1),
+            ),
+            (
+                min(disk_a_skew[0] + disk_a[1] + 1, disk_b_skew[0] + disk_b[1] + 1),
+                max(disk_a_skew[1] - disk_a[1] - 1, disk_b_skew[1] - disk_b[1] - 1),
+            ),
+            (
+                min(disk_a_skew[0] + disk_a[1] + 1, disk_b_skew[0] + disk_b[1] + 1),
+                min(disk_a_skew[1] + disk_a[1] + 1, disk_b_skew[1] + disk_b[1] + 1),
+            ),
+        ):
+            candidate = (
+                (candidate_skew[0] + candidate_skew[1]) // 2,
+                (candidate_skew[0] - candidate_skew[1]) // 2,
+            )
+            if 0 <= candidate[0] <= maxsize and 0 <= candidate[1] <= maxsize:
+                results.add(candidate)
+    return results
+
+
+def coverage(candidates, disks):
+    for candidate in candidates:
+        for disk in disks:
+            m_dist = abs(candidate[0] - disk[0][0]) + abs(candidate[1] - disk[0][1])
+            if m_dist <= disk[1]:
+                break
+        else:
+            return candidate
+
+
+def skew_coords(disks, maxsize):
+    candidates = intersections(disks, maxsize)
+    result = coverage(candidates, disks)
+    print(f"position: {result}")
+    print("part two frequency:", result[0] * 4_000_000 + result[1])
 
 
 part_one(data_filename, 2_000_000)
-part_two(data_filename, 4_000_000)
+disks = parser(data_filename)
+# perimeters_bf(disks, 4_000_000)
+skew_coords(disks, 4_000_000)
