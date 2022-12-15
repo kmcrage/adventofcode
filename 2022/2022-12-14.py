@@ -9,17 +9,12 @@ def parser(filename):  # sourcery skip: use-itertools-product
     wall = set()
     with open(filename, "r") as f:
         for line in f:
-            tokens = line.strip().split()
-            while len(tokens) > 2:
-                pos = [
-                    [int(n) for n in tokens[0].split(",")],
-                    [int(n) for n in tokens[2].split(",")],
-                ]
-                pos.sort()
+            coords = [list(map(int, c.split(','))) for c in line.split(' -> ')]
+            for pos in zip(coords, coords[1:]):
+                pos = sorted(pos)
                 for i in range(pos[0][0], pos[1][0] + 1):
                     for j in range(pos[0][1], pos[1][1] + 1):
                         wall.add((i, j))
-                tokens = tokens[2:]
     return wall
 
 
