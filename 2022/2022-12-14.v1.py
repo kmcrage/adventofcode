@@ -6,7 +6,7 @@ data_filename = "2022-12-14.dat"
 
 
 def parser(filename):  # sourcery skip: use-itertools-product
-    wall = set()
+    sand = set()
     with open(filename, "r") as f:
         for line in f:
             tokens = line.strip().split()
@@ -18,32 +18,29 @@ def parser(filename):  # sourcery skip: use-itertools-product
                 pos.sort()
                 for i in range(pos[0][0], pos[1][0] + 1):
                     for j in range(pos[0][1], pos[1][1] + 1):
-                        wall.add((i, j))
+                        sand.add((i, j))
                 tokens = tokens[2:]
-    return wall
+    return sand
 
 
-def drop(pos, depth, sand):
-    if pos in sand:
-        return False
-    if pos[1] >= depth:
-        return True
-    for new_pos in (
-        (pos[0], pos[1] + 1),
-        (pos[0] - 1, pos[1] + 1),
-        (pos[0] + 1, pos[1] + 1),
-    ):
-        if drop(new_pos, depth, sand):
-            return True
-    sand.add(pos)
-    return False
-
-
-def pour_sand(walls, start):
-    sand = walls.copy()
+def pour_sand(sand, start):
     depth = max(s[1] for s in sand)
-    drop(start, depth, sand)
-    print("grains:", len(sand) - len(walls))
+    pos = start
+    grains = 0
+    while pos[1] <= depth and start not in sand:
+        for new_pos in (
+            (pos[0], pos[1] + 1),
+            (pos[0] - 1, pos[1] + 1),
+            (pos[0] + 1, pos[1] + 1),
+        ):
+            if new_pos not in sand:
+                pos = new_pos
+                break
+        else:
+            sand.add(pos)
+            grains += 1
+            pos = start
+    print("grains:", grains)
 
 
 def add_floor(sand):
@@ -54,9 +51,9 @@ def add_floor(sand):
         sand.add((x, floor_depth))
 
 
-walls = parser(data_filename)
+sand = parser(data_filename)
 print("no floor ", end="")
-pour_sand(walls, (500, 0))
+pour_sand(sand.copy(), (500, 0))
 print("add floor ", end="")
-add_floor(walls)
-pour_sand(walls, (500, 0))
+add_floor(sand)
+pour_sand(sand.copy(), (500, 0))
