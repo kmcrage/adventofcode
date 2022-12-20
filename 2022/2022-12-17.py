@@ -64,7 +64,7 @@ def get_hash(chamber, top, width):
     )
 
 
-def part_one(num_rocks, chamber, rocks, jet):
+def part_one(num_rocks, chamber, rocks, jet):  # sourcery skip: low-code-quality
     width = max(j for _, j in chamber)
     time = 0
     repeats = {}
