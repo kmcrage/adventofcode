@@ -43,29 +43,28 @@ def compute(monkeys, target):
 def solve(monkeys, callers, source, soln):
     expr = monkeys[source]
     if isinstance(expr, complex):
-        print(f"part two, computed solution: {source} = {int(soln)}")
-        return
+        return int(soln)
 
     lhs = callers[expr[0]]
     if isinstance(lhs, complex):
         rhs = callers[expr[2]]
         if expr[1] == "+":
-            solve(monkeys, callers, expr[0], soln - rhs)
+            return solve(monkeys, callers, expr[0], soln - rhs)
         elif expr[1] == "-":
-            solve(monkeys, callers, expr[0], soln + rhs)
+            return solve(monkeys, callers, expr[0], soln + rhs)
         elif expr[1] == "*":
-            solve(monkeys, callers, expr[0], soln / rhs)
+            return solve(monkeys, callers, expr[0], soln / rhs)
         elif expr[1] == "/":
-            solve(monkeys, callers, expr[0], soln * rhs)
+            return solve(monkeys, callers, expr[0], soln * rhs)
 
     elif expr[1] == "+":
-        solve(monkeys, callers, expr[2], soln - lhs)
+        return solve(monkeys, callers, expr[2], soln - lhs)
     elif expr[1] == "-":
-        solve(monkeys, callers, expr[2], lhs - soln)
+        return solve(monkeys, callers, expr[2], lhs - soln)
     elif expr[1] == "*":
-        solve(monkeys, callers, expr[2], soln / lhs)
+        return solve(monkeys, callers, expr[2], soln / lhs)
     elif expr[1] == "/":
-        solve(monkeys, callers, expr[2], lhs / soln)
+        return solve(monkeys, callers, expr[2], lhs / soln)
 
 
 def part_two(monkeys_orig, equal, target):
@@ -84,7 +83,8 @@ def part_two(monkeys_orig, equal, target):
 
     # solve up the tree, inverting as we go
     monkeys[equal][1] = "-"
-    solve(monkeys, callers, equal, 0)
+    soln = solve(monkeys, callers, equal, 0)
+    print(f"part two, computed solution: {target} = {soln}")
 
 
 monkeys = parse(data_filename)
