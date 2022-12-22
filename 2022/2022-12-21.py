@@ -65,7 +65,7 @@ def solve(monkeys, callers, source, soln):
     elif expr[1] == "*":
         solve(monkeys, callers, expr[2], soln / lhs)
     elif expr[1] == "/":
-        solve(monkeys, callers, expr[2], soln * lhs)
+        solve(monkeys, callers, expr[2], lhs / soln)
 
 
 def part_two(monkeys_orig, equal, target):
