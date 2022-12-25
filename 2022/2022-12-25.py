@@ -8,8 +8,7 @@ data_filename = "2022-12-25.dat"
 
 
 def snafu_to_dec(snafu):
-    tokens = list(snafu.strip()[::-1])
-    return sum(DIGITS[d] * pow(5, p) for p, d in enumerate(tokens))
+    return sum(DIGITS[d] * pow(5, p) for p, d in enumerate(snafu.strip()[::-1]))
 
 
 def dec_to_snafu(num):
