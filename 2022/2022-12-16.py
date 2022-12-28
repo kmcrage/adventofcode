@@ -57,15 +57,19 @@ def single(start, moves, unvisited, part_two=False):
         (get_estimax(moves, unvisited, moves, part_two), moves, start, 0, unvisited)
     ]
     best = 0
+    opened = 0
+    if part_two:
+        best, min_opened_valves = single(start, moves, unvisited)
     while queue:
         estimax, time, pos, score, remaining = heapq.heappop(queue)
         if estimax <= best:
             continue
 
-        if part_two and 2 * len(remaining) <= len(unvisited) + 1:
-            elephant = single(start, moves, remaining)
+        if part_two and len(remaining) < len(unvisited) - min_opened_valves:
+            elephant, e_opened = single(start, moves, remaining)
             if elephant + score > best:
                 best = elephant + score
+                opened = len(unvisited) - len(remaining) + e_opened
 
         for nhbr in remaining:
             nhbr_time = time - ROUTES[(pos, nhbr)] - 1
@@ -74,6 +78,7 @@ def single(start, moves, unvisited, part_two=False):
             nhbr_score = score + nhbr_time * VALVES[nhbr]["rate"]
             if nhbr_score > best:
                 best = nhbr_score
+                opened = len(unvisited) - len(remaining)
             nhbr_remaining = remaining - {nhbr}
             nhbr_estimax = nhbr_score + get_estimax(
                 nhbr_time, nhbr_remaining, moves, part_two
@@ -82,13 +87,13 @@ def single(start, moves, unvisited, part_two=False):
                 heapq.heappush(
                     queue, (nhbr_estimax, nhbr_time, nhbr, nhbr_score, nhbr_remaining)
                 )
-    return best
+    return best, opened
 
 
 def part_one(start, moves, part_two=False):
     active = frozenset(v for v in VALVES if VALVES[v]["rate"] != 0)
-    result = single(start, moves, active, part_two=part_two)
-    print(f"part one: {result}")
+    result, opened = single(start, moves, active, part_two=part_two)
+    print(f"{moves} moves: {result}, {len(active)} active nodes, {opened} open valves")
 
 
 part_one("AA", 30)
