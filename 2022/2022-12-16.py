@@ -58,14 +58,12 @@ def single(start, moves, unvisited, part_two=False):
     ]
     best = 0
     opened = 0
-    if part_two:
-        best, min_opened_valves = single(start, moves, unvisited)
     while queue:
         estimax, time, pos, score, remaining = heapq.heappop(queue)
         if estimax <= best:
             continue
 
-        if part_two and len(remaining) < len(unvisited) - min_opened_valves:
+        if part_two and score >= best // 2:
             elephant, e_opened = single(start, moves, remaining)
             if elephant + score > best:
                 best = elephant + score
