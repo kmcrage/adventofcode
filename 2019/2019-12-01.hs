@@ -7,12 +7,12 @@ main = do
         read_int n = read n :: Integer
         fuel = sum $ map fuelCost masses
         rfuel = sum $ map recursiveFuelCost masses
-    print $ "fuel: " ++ show fuel
-    print $ "recursive fuel: " ++ show rfuel
+    putStrLn $ "fuel: " ++ show fuel
+    putStrLn $ "recursive fuel: " ++ show rfuel
 
 fuelCost :: Integer -> Integer
 fuelCost x = div x 3 -2
 
 recursiveFuelCost :: Integer -> Integer
-recursiveFuelCost x = sum $ takeWhile (>0) $ iterate fuelCost x
-
+-- recursiveFuelCost x = sum $ takeWhile (>0) $ tail $ iterate fuelCost x
+recursiveFuelCost = sum . takeWhile (> 0) . tail . iterate fuelCost
