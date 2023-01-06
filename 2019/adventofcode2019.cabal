@@ -1,0 +1,32 @@
+cabal-version:      2.4
+name:               adventofcode2019
+version:            0.1.0.0
+
+-- A short (one-line) description of the package.
+-- synopsis:
+
+-- A longer description of the package.
+-- description:
+
+-- A URL where users can report bugs.
+-- bug-reports:
+
+-- The license under which the package is released.
+-- license:
+author:             kevin campbell
+maintainer:         kevin.campbellrage@gmail.com
+
+-- A copyright notice.
+-- copyright:
+-- category:
+extra-source-files: CHANGELOG.md
+
+
+executable Day01
+    main-is:             2019-12-01.hs
+    hs-source-dirs:      app
+    build-depends:       base
+
+executable Day02
+    main-is:             app/2019-12-02.hs
+    build-depends:       base, split

@@ -1,8 +1,8 @@
 
 main :: IO ()
 main = do  
-    contents <- readFile "2019-12-01.dat"
-    -- contents <- readFile "test.dat"
+    contents <- readFile "data/2019-12-01.dat"
+    -- contents <- readFile "data/test.dat"
     let masses = map read_int $ lines contents
         read_int n = read n :: Integer
         fuel = sum $ map fuelCost masses
