@@ -30,3 +30,7 @@ executable Day01
 executable Day02
     main-is:             app/2019-12-02.hs
     build-depends:       base, split
+
+executable Day03
+    main-is:             app/2019-12-03.hs
+    build-depends:       base, split, text, containers
