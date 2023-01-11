@@ -21,28 +21,35 @@ maintainer:         kevin.campbellrage@gmail.com
 -- category:
 extra-source-files: CHANGELOG.md
 
+common aoc-common
+    build-depends:       base, split, text, containers, aoc
 
-executable Day01
-    main-is:             2019-12-01.hs
-    hs-source-dirs:      app
-    build-depends:       base
-
-executable Day02
-    main-is:             app/2019-12-02.hs
-    build-depends:       base, split
-
-executable Day03
-    main-is:             app/2019-12-03.hs
+library aoc
+    exposed-modules:     IntCode
+    hs-source-dirs:      intcode
+    default-language:    Haskell2010
     build-depends:       base, split, text, containers
 
+executable Day01
+    import:              aoc-common
+    main-is:             app/2019-12-01.hs
+
+executable Day02
+    import:              aoc-common
+    main-is:             app/2019-12-02.hs
+
+executable Day03
+    import:              aoc-common
+    main-is:             app/2019-12-03.hs
+
 executable Day04
+    import:              aoc-common
     main-is:             app/2019-12-04.hs
-    build-depends:       base, containers
 
 executable Day05
+    import:              aoc-common
     main-is:             app/2019-12-05.hs
-    build-depends:       base, split
 
 executable Day06
+    import:              aoc-common
     main-is:             app/2019-12-06.hs
-    build-depends:       base, split, containers, text
