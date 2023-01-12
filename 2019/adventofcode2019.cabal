@@ -23,6 +23,7 @@ extra-source-files: CHANGELOG.md
 
 common aoc-common
     build-depends:       base, split, text, containers, aoc
+    hs-source-dirs:      src
 
 library aoc
     exposed-modules:     IntCode
@@ -32,32 +33,32 @@ library aoc
 
 executable Day01
     import:              aoc-common
-    main-is:             app/2019-12-01.hs
+    main-is:             2019-12-01.hs
 
 executable Day02
     import:              aoc-common
-    main-is:             app/2019-12-02.hs
+    main-is:             2019-12-02.hs
 
 executable Day03
     import:              aoc-common
-    main-is:             app/2019-12-03.hs
+    main-is:             2019-12-03.hs
 
 executable Day04
     import:              aoc-common
-    main-is:             app/2019-12-04.hs
+    main-is:             2019-12-04.hs
 
 executable Day05
     import:              aoc-common
-    main-is:             app/2019-12-05.hs
+    main-is:             2019-12-05.hs
 
 executable Day06
     import:              aoc-common
-    main-is:             app/2019-12-06.hs
+    main-is:             2019-12-06.hs
 
 executable Day07
     import:              aoc-common
-    main-is:             app/2019-12-07.hs
+    main-is:             2019-12-07.hs
 
 executable Day08
     import:              aoc-common
-    main-is:             app/2019-12-08.hs
+    main-is:             2019-12-08.hs
