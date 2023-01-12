@@ -53,3 +53,7 @@ executable Day05
 executable Day06
     import:              aoc-common
     main-is:             app/2019-12-06.hs
+
+executable Day07
+    import:              aoc-common
+    main-is:             app/2019-12-07.hs

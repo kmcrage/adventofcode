@@ -1,5 +1,4 @@
 import           Data.List.Split
-import           Debug.Trace
 
 import           IntCode
 

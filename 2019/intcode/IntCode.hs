@@ -1,29 +1,36 @@
 module IntCode where
 
-import           Data.List.Split
+data State
+  = Running
+  | Paused
+  | Halted
+  deriving (Show, Eq)
 
---             Instructions, Input, Pointer, Output
-type Machine = ([Int], [Int], Int, [Int])
+--             Instructions, Input, Pointer, Output, State
+type Machine = ([Int], [Int], Int, [Int], State)
 
 outputM :: Machine -> [Int]
-outputM (_, _, _, output) = output
+outputM (_, _, _, output, _) = output
 
 memoryM :: Machine -> [Int]
-memoryM (memory, _, _, _) = memory
+memoryM (memory, _, _, _, _) = memory
 
 memoryM0 :: Machine -> Int
 memoryM0 = head . memoryM
 
+stateM :: Machine -> State
+stateM (_, _, _, _, state) = state
+
 runPrg :: [Int] -> [Int] -> Machine
 runPrg xs input = machine
   where
-    init = (xs, input, 0, [])
+    init = (xs, input, 0, [], Running)
     machine = runPrgAt init
 
 runPrgAt :: Machine -> Machine
-runPrgAt (xs, input, p, output)
+runPrgAt (xs, input, p, output, state)
   | p > length xs = mAfter
-  | op == 99 = mAfter
+  | stateM mAfter /= Running = mAfter
   | otherwise = runPrgAt mAfter
   where
     opMode = xs !! p
@@ -31,7 +38,7 @@ runPrgAt (xs, input, p, output)
     mode = div opMode 100
     opArgsRaw = drop (p + 1) $ take (p + 4) xs
     opArgs = processArgs op opArgsRaw mode xs
-    mAfter = runOp op opArgs (xs, input, p, output)
+    mAfter = runOp op opArgs (xs, input, p, output, state)
 
 processArgs :: Int -> [Int] -> Int -> [Int] -> [Int]
 processArgs 3 raw _ _     = raw
@@ -52,21 +59,24 @@ maybeReplaceElementAt 0 xs raw idx =
 maybeReplaceElementAt 1 _ raw _ = raw
 
 runOp :: Int -> [Int] -> Machine -> Machine
-runOp 1 (a:b:rIdx:_) (xs, input, p, output) =
-  (runAdd a b rIdx xs, input, p + 4, output)
-runOp 2 (a:b:rIdx:_) (xs, input, p, output) =
-  (runMult a b rIdx xs, input, p + 4, output)
-runOp 3 (rIdx:_) (xs, input, p, output) =
-  (runInput rIdx xs input, input, p + 2, output)
-runOp 4 (a:_) (xs, input, p, output) = (xs, input, p + 2, output ++ [a]) -- output
-runOp 5 (0:_) (xs, input, p, output) = (xs, input, p + 3, output) -- jump if true
-runOp 5 (_:q:_) (xs, input, p, output) = (xs, input, q, output)
-runOp 6 (0:q:_) (xs, input, p, output) = (xs, input, q, output) -- jump if false
-runOp 6 _ (xs, input, p, output) = (xs, input, p + 3, output)
-runOp 7 (a:b:rIdx:_) (xs, input, p, output) =
-  (runLessThan a b rIdx xs, input, p + 4, output)
-runOp 8 (a:b:rIdx:_) (xs, input, p, output) =
-  (runEqual a b rIdx xs, input, p + 4, output)
+runOp 1 (a:b:rIdx:_) (xs, input, p, output, _) =
+  (runAdd a b rIdx xs, input, p + 4, output, Running)
+runOp 2 (a:b:rIdx:_) (xs, input, p, output, _) =
+  (runMult a b rIdx xs, input, p + 4, output, Running)
+runOp 3 (rIdx:_) (xs, input, p, output, _)
+  | null input = (xs, input, p, output, Paused)
+  | otherwise = (runInput rIdx xs input, tail input, p + 2, output, Running) -- input
+runOp 4 (a:_) (xs, input, p, output, _) =
+  (xs, input, p + 2, output ++ [a], Running) -- output
+runOp 5 (0:_) (xs, input, p, output, _) = (xs, input, p + 3, output, Running) -- jump if true
+runOp 5 (_:q:_) (xs, input, p, output, _) = (xs, input, q, output, Running)
+runOp 6 (0:q:_) (xs, input, p, output, _) = (xs, input, q, output, Running) -- jump if false
+runOp 6 _ (xs, input, p, output, _) = (xs, input, p + 3, output, Running)
+runOp 7 (a:b:rIdx:_) (xs, input, p, output, _) =
+  (runLessThan a b rIdx xs, input, p + 4, output, Running)
+runOp 8 (a:b:rIdx:_) (xs, input, p, output, _) =
+  (runEqual a b rIdx xs, input, p + 4, output, Running)
+runOp 99 _ (xs, input, p, output, _) = (xs, input, 0, output, Halted)
 runOp _ _ machine = machine
 
 runAdd :: Int -> Int -> Int -> [Int] -> [Int]
