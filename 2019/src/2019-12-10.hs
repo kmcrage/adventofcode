@@ -12,13 +12,11 @@ main = do
   -- contents <- readFile "data/test.dat"
   let pts = parse contents
       ptsSet = S.fromList pts
-      maxvispt = maximum $ L.map ((`visible` ptsSet) &&& id) pts
-      maxvis = fst maxvispt
-      maxpt = snd maxvispt
+      (maxvis, maxpt) = maximum $ L.map ((`visible` ptsSet) &&& id) pts
       pts' = filter (/= maxpt) pts
       sorted = sortByDeletion maxpt pts'
-      pt200 = sorted !! (200 - 1)
-      result = 100 * fst pt200 + snd pt200
+      (rx, ry) = sorted !! (200 - 1)
+      result = 100 * rx + ry
   putStrLn $ "Max vis asteroids: " ++ show maxvis ++ " at " ++ show maxpt
   putStrLn $ "Part Two: " ++ show result
 
@@ -41,12 +39,6 @@ toAngle :: Coord -> Float
 toAngle (a, b)
   | a == 0 && b < 0 = 0
   | otherwise = pi - atan2 (fromIntegral a) (fromIntegral b)
-
-calcLayer :: (Coord, [(Coord, Coord)]) -> [(Int, Coord, Coord)] -- layer, diff, coord
-calcLayer (direction, ocs) = ocsLayered
-  where
-    ocsSorted = L.sortOn (\((a, b), _) -> abs a + abs b) ocs
-    ocsLayered = zipWith (curry (\(a, (b, c)) -> (a, b, c))) [0 ..] ocsSorted
 
 visible :: Coord -> S.Set Coord -> Int
 visible coord coords = cnt
