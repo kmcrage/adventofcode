@@ -41,10 +41,9 @@ toAngle (a, b)
   | otherwise = pi - atan2 (fromIntegral a) (fromIntegral b)
 
 visible :: Coord -> S.Set Coord -> Int
-visible coord coords = cnt
+visible coord = length . directions
   where
-    others = S.filter (/= coord) coords
-    cnt = length $ S.map (direction coord) others
+    directions = S.filter (/= coord) >>> S.map (direction coord)
 
 diff :: Coord -> Coord -> Coord
 diff (a, b) (x, y) = (x - a, y - b)
@@ -56,12 +55,8 @@ direction a b = (div d n, div e n)
     n = gcd (abs d) (abs e)
 
 parse :: String -> [Coord]
-parse contents = pts'
-  where
-    numlines = zip [0 ..] (lines contents)
-    ptsRaw =
-      concatMap
-        (\(j, line) -> zipWith (\i char -> (i, j, char)) [0 ..] line)
-        numlines
-    pts = filter (\(i, j, c) -> c == '#') ptsRaw
-    pts' = map (\(i, j, c) -> (i, j)) pts
+parse =
+  lines >>>
+  zip [0 ..] >>>
+  concatMap (\(j, line) -> zipWith (\i char -> (i, j, char)) [0 ..] line) >>>
+  filter (\(i, j, c) -> c == '#') >>> map (\(i, j, c) -> (i, j))
