@@ -40,18 +40,14 @@ chainevalFn :: ([Machine] -> [Machine]) -> [Int] -> Int -> [Int] -> [Int]
 chainevalFn fn intcode signal phases = outputM finalm
   where
     chain = map (initMachine intcode) phases
-    chain' = addsignal chain [signal]
+    chain' = addSignal chain [signal]
     resultm = fn chain'
     finalm = last resultm
 
-initMachine :: [Int] -> Int -> Machine
-initMachine intcode signal = (intcode, [signal], 0, [], Running)
-
-addsignal :: [Machine] -> [Int] -> [Machine]
-addsignal (m:machines) signal = n : machines
+addSignal :: [Machine] -> [Int] -> [Machine]
+addSignal (m:machines) signal = n : machines
   where
-    (intcodes, inputs, p, outputs, done) = m
-    n = (intcodes, inputs ++ signal, p, outputs, done)
+    n = addSignalM m signal
 
 runchain :: [Machine] -> [Machine]
 runchain ms
@@ -67,10 +63,9 @@ feedbackSignal ms
   | otherwise = start ++ [l']
   where
     l = last ms
-    (lIntcodes, lInputs, lP, lOutputs, lDone) = l
-    ns = addsignal ms lOutputs
+    ns = addSignal ms (outputM l)
     start = take (length ns - 1) ns
-    l' = (lIntcodes, lInputs, lP, [], lDone)
+    l' = flushOutput l
 
 runchainOnce :: [Machine] -> [Machine]
 runchainOnce (m:ms)
@@ -78,6 +73,5 @@ runchainOnce (m:ms)
   | otherwise = n : runchainOnce ns
   where
     m' = runPrgAt m
-    (intcodes, inputs, p, outputs, done) = m'
-    n = (intcodes, inputs, p, [], done)
-    ns = addsignal ms outputs
+    n = flushOutput m'
+    ns = addSignal ms (outputM m')

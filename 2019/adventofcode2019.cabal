@@ -62,3 +62,7 @@ executable Day07
 executable Day08
     import:              aoc-common
     main-is:             2019-12-08.hs
+
+executable Day09
+    import:              aoc-common
+    main-is:             2019-12-09.hs
