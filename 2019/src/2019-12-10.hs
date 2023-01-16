@@ -22,9 +22,8 @@ main = do
 
 sortByDeletion :: Coord -> [Coord] -> [Coord]
 sortByDeletion origin =
-  map (diff origin &&& id) >>>
-  L.sortOn (manhattan . fst) >>>
-  E.groupSortOn (toAngle . fst) >>> map (map snd) >>> laser
+  L.sortOn (manhattan . diff origin) >>>
+  E.groupSortOn (toAngle . diff origin) >>> laser
 
 laser :: [[Coord]] -> [Coord]
 laser [] = []
