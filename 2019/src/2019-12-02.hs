@@ -11,7 +11,7 @@ main = do
       strcodes = splitOn "," contents
       intcodes' = replaceElementAt intcodes 1 12
       intcodes'' = replaceElementAt intcodes' 2 2
-      result = memoryM0 $ runPrg intcodes'' []
+      result = head . memory $ runPrg intcodes'' []
       solution = findNounVerb intcodes 19690720
       nounVerb = head solution * 100 + (solution !! 1)
   putStrLn $ "Output: " ++ show result
@@ -28,4 +28,4 @@ findNounVerbIter xs ans noun verb
   where
     xsn = replaceElementAt xs 1 noun
     xsnv = replaceElementAt xsn 2 verb
-    memory0 = memoryM0 $ runPrg xsnv []
+    memory0 = head . memory $ runPrg xsnv []

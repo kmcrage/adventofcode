@@ -28,7 +28,7 @@ chainmaxFn fn intcode init phases = maximum $ map (maximum . chainop) perms
     perms = permutations phases
 
 chainIsDone :: [Machine] -> Bool
-chainIsDone = all ((== Halted) . stateM)
+chainIsDone = all ((== Halted) . state)
 
 chaineval :: [Int] -> Int -> [Int] -> [Int]
 chaineval = chainevalFn runchain
@@ -37,9 +37,9 @@ chainevalOnce :: [Int] -> Int -> [Int] -> [Int]
 chainevalOnce = chainevalFn runchainOnce
 
 chainevalFn :: ([Machine] -> [Machine]) -> [Int] -> Int -> [Int] -> [Int]
-chainevalFn fn intcode signal phases = outputM finalm
+chainevalFn fn intcode signal phases = output finalm
   where
-    chain = map (initMachine intcode) phases
+    chain = map (initMachine intcode . singleton) phases
     chain' = addSignal chain [signal]
     resultm = fn chain'
     finalm = last resultm
@@ -63,7 +63,7 @@ feedbackSignal ms
   | otherwise = start ++ [l']
   where
     l = last ms
-    ns = addSignal ms (outputM l)
+    ns = addSignal ms (output l)
     start = take (length ns - 1) ns
     l' = flushOutput l
 
@@ -74,4 +74,4 @@ runchainOnce (m:ms)
   where
     m' = runPrgAt m
     n = flushOutput m'
-    ns = addSignal ms (outputM m')
+    ns = addSignal ms (output m')

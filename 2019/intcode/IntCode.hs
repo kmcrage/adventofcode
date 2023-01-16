@@ -1,5 +1,6 @@
 module IntCode where
-import Debug.Trace 
+
+import           Debug.Trace
 
 data State
   = Running
@@ -8,51 +9,47 @@ data State
   deriving (Show, Eq)
 
 --             Instructions, Input, Pointer, Offset, Output, State
-type Machine = ([Int], [Int], Int, Int, [Int], State)
+data Machine =
+  Machine
+    { memory  :: [Int]
+    , input   :: [Int]
+    , pointer :: Int
+    , offset  :: Int
+    , output  :: [Int]
+    , state   :: State
+    }
+  deriving (Show)
 
-initMachine :: [Int] -> Int -> Machine
-initMachine intcode signal = (intcode, [signal], 0, 0, [], Running)
-
-outputM :: Machine -> [Int]
-outputM (_, _, _, _, output, _) = output
-
-pointerM :: Machine -> Int
-pointerM (_, _, p, _, _, _) = p
-
-offsetM :: Machine -> Int
-offsetM (_, _, _, o, _, _) = o
-
-memoryM :: Machine -> [Int]
-memoryM (memory, _, _, _, _, _) = memory
-
-memoryM0 :: Machine -> Int
-memoryM0 = head . memoryM
-
-stateM :: Machine -> State
-stateM (_, _, _, _, _, state) = state
+initMachine :: [Int] -> [Int] -> Machine
+initMachine intcode signal =
+  Machine
+    { memory = intcode
+    , input = signal
+    , pointer = 0
+    , offset = 0
+    , output = []
+    , state = Running
+    }
 
 flushOutput :: Machine -> Machine
-flushOutput (xs, input, p, o, output, state) = (xs, input, p, o, [], state)
+flushOutput m = m {output = []}
 
 addSignalM :: Machine -> [Int] -> Machine
-addSignalM m signal = n
-  where
-    (intcodes, inputs, p, o, outputs, done) = m
-    n = (intcodes, inputs ++ signal, p, o, outputs, done)
+addSignalM m signal = m {input = input m ++ signal}
 
 runPrg :: [Int] -> [Int] -> Machine
 runPrg xs input = machine
   where
-    init = (xs, input, 0, 0, [], Running)
+    init = initMachine xs input
     machine = runPrgAt init
 
 runPrgAt :: Machine -> Machine
 runPrgAt m
-  | stateM mAfter /= Running = mAfter
+  | state mAfter /= Running = mAfter
   | otherwise = runPrgAt mAfter
   where
-    xs = memoryM m
-    p = pointerM m
+    xs = memory m
+    p = pointer m
     opMode = xs !! p
     op = mod opMode 100
     mode = div opMode 100
@@ -61,9 +58,9 @@ runPrgAt m
     mAfter = runOp op opArgs m
 
 processArgs :: Int -> [Int] -> Int -> Machine -> [Int]
-processArgs 3 (idx:args) 2 m = (idx + offsetM m):args
-processArgs 3 raw _ _ = raw
-processArgs _ raw mode m = cookArgs raw mode m
+processArgs 3 (idx:args) 2 m = (idx + offset m) : args
+processArgs 3 raw _ _        = raw
+processArgs _ raw mode m     = cookArgs raw mode m
 
 cookArgs :: [Int] -> Int -> Machine -> [Int]
 cookArgs raw mode m = cooked''
@@ -77,10 +74,9 @@ cookArgs raw mode m = cooked''
 
 maybeOffset :: Int -> Machine -> [Int] -> [Int]
 maybeOffset mode m (a:b:c:_)
-  | mode == 2 = [a, b, c + offsetM m]
-  | otherwise = [a,b,c]
+  | mode == 2 = [a, b, c + offset m]
+  | otherwise = [a, b, c]
 maybeOffset mode m args = args
-
 
 maybeReplaceElementAt :: Int -> Machine -> [Int] -> Int -> [Int]
 maybeReplaceElementAt mode m raw idx
@@ -88,35 +84,39 @@ maybeReplaceElementAt mode m raw idx
   | mode == 2 = replaceElementAt raw idx offsetVal
   | otherwise = raw
   where
-    xs = memoryM m
-    offset = offsetM m
+    xs = memory m
+    off = offset m
     memVal = xs !! (raw !! idx)
-    offsetVal = xs !!  (offset + (raw !! idx))
+    offsetVal = xs !! (off + (raw !! idx))
 
 runOp :: Int -> [Int] -> Machine -> Machine
-runOp 1 (a:b:rIdx:_) (xs, input, p, o, output, _) =
-  (runAdd a b rIdx xs, input, p + 4, o, output, Running)
-runOp 2 (a:b:rIdx:_) (xs, input, p, o, output, _) =
-  (runMult a b rIdx xs, input, p + 4, o, output, Running)
-runOp 3 (rIdx:_) (xs, input, p, o, output, _)
-  | null input = (xs, input, p, o, output, Paused)
-  | otherwise = (runInput rIdx xs input, tail input, p + 2, o, output, Running) -- input
-runOp 4 (a:_) (xs, input, p, o, output, _) =
-  (xs, input, p + 2, o, output ++ [a], Running) -- output
-runOp 5 (0:_) (xs, input, p, o, output, _) =
-  (xs, input, p + 3, o, output, Running) -- jump if true
-runOp 5 (_:q:_) (xs, input, p, o, output, _) =
-  (xs, input, q, o, output, Running)
-runOp 6 (0:q:_) (xs, input, p, o, output, _) =
-  (xs, input, q, o, output, Running) -- jump if false
-runOp 6 _ (xs, input, p, o, output, _) = (xs, input, p + 3, o, output, Running)
-runOp 7 (a:b:rIdx:_) (xs, input, p, o, output, _) =
-  (runLessThan a b rIdx xs, input, p + 4, o, output, Running)
-runOp 8 (a:b:rIdx:_) (xs, input, p, o, output, _) =
-  (runEqual a b rIdx xs, input, p + 4, o, output, Running)
-runOp 9 (a:_) (xs, input, p, o, output, state) =
-  (xs, input, p + 2, o + a, output, state)
-runOp 99 _ (xs, input, p, o, output, _) = (xs, input, 0, o, output, Halted)
+runOp 1 (a:b:rIdx:_) m =
+  m {memory = runAdd a b rIdx (memory m), pointer = 4 + pointer m}
+runOp 2 (a:b:rIdx:_) m =
+  m {memory = runMult a b rIdx (memory m), pointer = 4 + pointer m}
+runOp 3 (rIdx:_) m -- input
+  | null (input m) = m {state = Paused}
+  | otherwise =
+    m
+      { memory = runInput rIdx (memory m) (input m)
+      , input = input'
+      , pointer = pointer'
+      , state = Running
+      }
+  where
+    input' = tail $ input m
+    pointer' = 2 + pointer m
+runOp 4 (a:_) m = m {output = output m ++ [a], pointer = 2 + pointer m} -- output
+runOp 5 (0:_) m = m {pointer = 3 + pointer m} -- jump if true
+runOp 5 (_:q:_) m = m {pointer = q}
+runOp 6 (0:q:_) m = m {pointer = q} -- jump if false
+runOp 6 _ m = m {pointer = 3 + pointer m}
+runOp 7 (a:b:rIdx:_) m =
+  m {memory = runLessThan a b rIdx (memory m), pointer = 4 + pointer m}
+runOp 8 (a:b:rIdx:_) m =
+  m {memory = runEqual a b rIdx (memory m), pointer = 4 + pointer m}
+runOp 9 (a:_) m = m {pointer = 2 + pointer m, offset = a + offset m}
+runOp 99 _ m = m {pointer = 0, state = Halted}
 runOp _ _ machine = machine
 
 runAdd :: Int -> Int -> Int -> [Int] -> [Int]

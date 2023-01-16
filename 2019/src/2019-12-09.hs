@@ -10,7 +10,7 @@ main = do
       read_int n = read n :: Int
       strcodes = splitOn "," contents
       intcodes' = intcodes ++ repeat 0
-      diagnostic = outputM $ runPrg intcodes' [1]
-      result = outputM $ runPrg intcodes' [2]
+      diagnostic = output $ runPrg intcodes' [1]
+      result = output $ runPrg intcodes' [2]
   putStrLn $ "Part One Output: " ++ show diagnostic
   putStrLn $ "Part Two Output: " ++ show result
