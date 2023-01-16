@@ -63,31 +63,22 @@ processArgs 3 raw _ _        = raw
 processArgs _ raw mode m     = cookArgs raw mode m
 
 cookArgs :: [Int] -> Int -> Machine -> [Int]
-cookArgs raw mode m = cooked''
+cookArgs [r] 2 m = [r + offset m]
+cookArgs [r] _ _ = [r]
+cookArgs (r:rs) mode m
+  | mode' == 0 = memVal : cookArgs rs (div mode 10) m
+  | mode' == 2 = offsetVal : cookArgs rs (div mode 10) m
+  | otherwise = r : cookArgs rs (div mode 10) m
   where
-    mode0 = mod mode 10
-    mode1 = mod (div mode 10) 10
-    mode2 = mod (div mode 100) 100
-    cooked = maybeReplaceElementAt mode0 m raw 0
-    cooked' = maybeReplaceElementAt mode1 m cooked 1
-    cooked'' = maybeOffset mode2 m cooked' -- this is a write index
-
-maybeOffset :: Int -> Machine -> [Int] -> [Int]
-maybeOffset mode m (a:b:c:_)
-  | mode == 2 = [a, b, c + offset m]
-  | otherwise = [a, b, c]
-maybeOffset mode m args = args
-
-maybeReplaceElementAt :: Int -> Machine -> [Int] -> Int -> [Int]
-maybeReplaceElementAt mode m raw idx
-  | mode == 0 = replaceElementAt raw idx memVal
-  | mode == 2 = replaceElementAt raw idx offsetVal
-  | otherwise = raw
-  where
+    mode' = mod mode 10
     xs = memory m
     off = offset m
-    memVal = xs !! (raw !! idx)
-    offsetVal = xs !! (off + (raw !! idx))
+    overlen = max 0 (1 + r - length xs + max 0 off)
+    xs'
+      | overlen > 0 = xs ++ replicate overlen 0
+      | otherwise = xs
+    memVal = xs' !! r
+    offsetVal = xs' !! (off + r)
 
 runOp :: Int -> [Int] -> Machine -> Machine
 runOp 1 (a:b:rIdx:_) m =
@@ -139,7 +130,8 @@ runInput :: Int -> [Int] -> [Int] -> [Int]
 runInput rIdx xs input = replaceElementAt xs rIdx (head input)
 
 replaceElementAt :: [Int] -> Int -> Int -> [Int]
-replaceElementAt xs rIdx val = pre ++ [val] ++ post
+replaceElementAt xs rIdx val = pre ++ val : post
   where
-    pre = take rIdx xs
+    xs' = xs ++ replicate (max 0 (1 + rIdx - length xs)) 0
+    pre = take rIdx xs'
     post = drop (rIdx + 1) xs

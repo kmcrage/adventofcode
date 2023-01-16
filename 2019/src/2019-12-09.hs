@@ -9,7 +9,7 @@ main = do
   let intcodes = map read_int strcodes
       read_int n = read n :: Int
       strcodes = splitOn "," contents
-      intcodes' = intcodes ++ repeat 0
+      intcodes' = intcodes
       diagnostic = output $ runPrg intcodes' [1]
       result = output $ runPrg intcodes' [2]
   putStrLn $ "Part One Output: " ++ show diagnostic

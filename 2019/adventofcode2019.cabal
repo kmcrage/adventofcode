@@ -37,7 +37,7 @@ test-suite intcode-test
     hs-source-dirs:      test
     main-is:             Tests.hs
     type:                exitcode-stdio-1.0
-    build-depends:       QuickCheck, HUnit
+    build-depends:       tasty, tasty-quickcheck, tasty-hunit
 
 executable day01
     import:              aoc-common
