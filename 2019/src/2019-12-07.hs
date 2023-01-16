@@ -31,30 +31,30 @@ chainIsDone :: [Machine] -> Bool
 chainIsDone = all ((== Halted) . state)
 
 chaineval :: [Int] -> Int -> [Int] -> [Int]
-chaineval = chainevalFn runchain
+chaineval = chainevalFn runChain
 
 chainevalOnce :: [Int] -> Int -> [Int] -> [Int]
-chainevalOnce = chainevalFn runchainOnce
+chainevalOnce = chainevalFn runChainOnce
 
 chainevalFn :: ([Machine] -> [Machine]) -> [Int] -> Int -> [Int] -> [Int]
 chainevalFn fn intcode signal phases = output finalm
   where
     chain = map (initMachine intcode . singleton) phases
-    chain' = addSignal chain [signal]
+    chain' = addSignalChain chain [signal]
     resultm = fn chain'
     finalm = last resultm
 
-addSignal :: [Machine] -> [Int] -> [Machine]
-addSignal (m:machines) signal = n : machines
+addSignalChain :: [Machine] -> [Int] -> [Machine]
+addSignalChain (m:machines) signal = n : machines
   where
-    n = addSignalM m signal
+    n = addSignal m signal
 
-runchain :: [Machine] -> [Machine]
-runchain ms
+runChain :: [Machine] -> [Machine]
+runChain ms
   | chainIsDone ns = ns
-  | otherwise = runchain ns'
+  | otherwise = runChain ns'
   where
-    ns = runchainOnce ms
+    ns = runChainOnce ms
     ns' = feedbackSignal ns
 
 feedbackSignal :: [Machine] -> [Machine]
@@ -63,15 +63,15 @@ feedbackSignal ms
   | otherwise = start ++ [l']
   where
     l = last ms
-    ns = addSignal ms (output l)
+    ns = addSignalChain ms (output l)
     start = take (length ns - 1) ns
     l' = flushOutput l
 
-runchainOnce :: [Machine] -> [Machine]
-runchainOnce (m:ms)
+runChainOnce :: [Machine] -> [Machine]
+runChainOnce (m:ms)
   | null ms = [m']
-  | otherwise = n : runchainOnce ns
+  | otherwise = n : runChainOnce ns
   where
     m' = runPrgAt m
     n = flushOutput m'
-    ns = addSignal ms (output m')
+    ns = addSignalChain ms (output m')

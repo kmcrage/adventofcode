@@ -34,8 +34,8 @@ initMachine intcode signal =
 flushOutput :: Machine -> Machine
 flushOutput m = m {output = []}
 
-addSignalM :: Machine -> [Int] -> Machine
-addSignalM m signal = m {input = input m ++ signal}
+addSignal :: Machine -> [Int] -> Machine
+addSignal m signal = m {input = input m ++ signal}
 
 runPrg :: [Int] -> [Int] -> Machine
 runPrg xs input = machine
