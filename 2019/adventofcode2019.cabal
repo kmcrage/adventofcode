@@ -31,42 +31,50 @@ library aoc
     default-language:    Haskell2010
     build-depends:       base, split, text, containers
 
-executable Day01
+test-suite intcode-test
+    import:              aoc-common
+    default-language:    Haskell2010
+    hs-source-dirs:      test
+    main-is:             Tests.hs
+    type:                exitcode-stdio-1.0
+    build-depends:       QuickCheck, HUnit
+
+executable day01
     import:              aoc-common
     main-is:             2019-12-01.hs
 
-executable Day02
+executable day02
     import:              aoc-common
     main-is:             2019-12-02.hs
 
-executable Day03
+executable day03
     import:              aoc-common
     main-is:             2019-12-03.hs
 
-executable Day04
+executable day04
     import:              aoc-common
     main-is:             2019-12-04.hs
 
-executable Day05
+executable day05
     import:              aoc-common
     main-is:             2019-12-05.hs
 
-executable Day06
+executable day06
     import:              aoc-common
     main-is:             2019-12-06.hs
 
-executable Day07
+executable day07
     import:              aoc-common
     main-is:             2019-12-07.hs
 
-executable Day08
+executable day08
     import:              aoc-common
     main-is:             2019-12-08.hs
 
-executable Day09
+executable day09
     import:              aoc-common
     main-is:             2019-12-09.hs
 
-executable Day10
+executable day10
     import:              aoc-common
     main-is:             2019-12-10.hs
