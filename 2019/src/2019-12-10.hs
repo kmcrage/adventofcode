@@ -57,5 +57,8 @@ parse :: String -> [Coord]
 parse =
   lines >>>
   zip [0 ..] >>>
-  concatMap (\(j, line) -> zipWith (\i char -> (i, j, char)) [0 ..] line) >>>
+  concatMap coordChar >>>
   filter (\(i, j, c) -> c == '#') >>> map (\(i, j, c) -> (i, j))
+
+coordChar :: (Int, String) -> [(Int, Int, Char)]
+coordChar (j, line) = zipWith (\i char -> (i, j, char)) [0 ..] line
