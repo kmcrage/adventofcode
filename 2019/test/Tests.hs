@@ -244,7 +244,7 @@ test7 =
     [34915192 * 34915192]
 
 memoryTest :: [Int] -> [Int] -> [Int]
-memoryTest intcodes input = IC.memory $ IC.runPrg intcodes input
+memoryTest intcodes input = IC.memoryList $ IC.runPrg intcodes input
 
 outputTest :: [Int] -> [Int] -> [Int]
 outputTest intcodes input = IC.output $ IC.runPrg intcodes input

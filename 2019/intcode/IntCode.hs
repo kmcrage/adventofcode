@@ -1,6 +1,6 @@
 module IntCode where
 
-import           Debug.Trace
+import qualified Data.Map as M
 
 data State
   = Running
@@ -11,7 +11,7 @@ data State
 --             Instructions, Input, Pointer, Offset, Output, State
 data Machine =
   Machine
-    { memory  :: [Int]
+    { memory  :: M.Map Int Int
     , input   :: [Int]
     , pointer :: Int
     , offset  :: Int
@@ -23,13 +23,22 @@ data Machine =
 initMachine :: [Int] -> [Int] -> Machine
 initMachine intcode signal =
   Machine
-    { memory = intcode
+    { memory = M.fromList $ zip [0 ..] intcode
     , input = signal
     , pointer = 0
     , offset = 0
     , output = []
     , state = Running
     }
+
+memory0 :: Machine -> Int
+memory0 m = (memory m) M.! 0
+
+memoryList :: Machine -> [Int]
+memoryList m = map (\p -> M.findWithDefault 0 p mem) [0..pmax]
+  where
+    mem = memory m
+    pmax = maximum $ M.keys mem
 
 flushOutput :: Machine -> Machine
 flushOutput m = m {output = []}
@@ -50,10 +59,10 @@ runPrgAt m
   where
     xs = memory m
     p = pointer m
-    opMode = xs !! p
+    opMode = xs M.! p
     op = mod opMode 100
     mode = div opMode 100
-    opArgsRaw = drop (p + 1) $ take (p + 4) xs
+    opArgsRaw = map (\p -> M.findWithDefault 0 p xs) [(p + 1) .. (p + 3)]
     opArgs = processArgs op opArgsRaw mode m
     mAfter = runOp op opArgs m
 
@@ -73,12 +82,8 @@ cookArgs (r:rs) mode m
     mode' = mod mode 10
     xs = memory m
     off = offset m
-    overlen = max 0 (1 + r - length xs + max 0 off)
-    xs'
-      | overlen > 0 = xs ++ replicate overlen 0
-      | otherwise = xs
-    memVal = xs' !! r
-    offsetVal = xs' !! (off + r)
+    memVal = M.findWithDefault 0 r xs
+    offsetVal = M.findWithDefault 0 (off + r) xs
 
 runOp :: Int -> [Int] -> Machine -> Machine
 runOp 1 (a:b:rIdx:_) m =
@@ -110,28 +115,24 @@ runOp 9 (a:_) m = m {pointer = 2 + pointer m, offset = a + offset m}
 runOp 99 _ m = m {pointer = 0, state = Halted}
 runOp _ _ machine = machine
 
-runAdd :: Int -> Int -> Int -> [Int] -> [Int]
+runAdd :: Int -> Int -> Int -> M.Map Int Int -> M.Map Int Int
 runAdd a b rIdx xs = replaceElementAt xs rIdx (a + b)
 
-runMult :: Int -> Int -> Int -> [Int] -> [Int]
+runMult :: Int -> Int -> Int -> M.Map Int Int -> M.Map Int Int
 runMult a b rIdx xs = replaceElementAt xs rIdx (a * b)
 
-runLessThan :: Int -> Int -> Int -> [Int] -> [Int]
+runLessThan :: Int -> Int -> Int -> M.Map Int Int -> M.Map Int Int
 runLessThan a b rIdx xs
   | a < b = replaceElementAt xs rIdx 1
   | otherwise = replaceElementAt xs rIdx 0
 
-runEqual :: Int -> Int -> Int -> [Int] -> [Int]
+runEqual :: Int -> Int -> Int -> M.Map Int Int -> M.Map Int Int
 runEqual a b rIdx xs
   | a == b = replaceElementAt xs rIdx 1
   | otherwise = replaceElementAt xs rIdx 0
 
-runInput :: Int -> [Int] -> [Int] -> [Int]
+runInput :: Int -> M.Map Int Int -> [Int] -> M.Map Int Int
 runInput rIdx xs input = replaceElementAt xs rIdx (head input)
 
-replaceElementAt :: [Int] -> Int -> Int -> [Int]
-replaceElementAt xs rIdx val = pre ++ val : post
-  where
-    xs' = xs ++ replicate (max 0 (1 + rIdx - length xs)) 0
-    pre = take rIdx xs'
-    post = drop (rIdx + 1) xs
+replaceElementAt :: M.Map Int Int -> Int -> Int -> M.Map Int Int
+replaceElementAt xs rIdx val = M.insert rIdx val xs
