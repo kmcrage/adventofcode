@@ -22,7 +22,7 @@ maintainer:         kevin.campbellrage@gmail.com
 extra-source-files: CHANGELOG.md
 
 common aoc-common
-    build-depends:       base, split, text, extra, containers, aoc
+    build-depends:       base, split, text, extra, containers, linear, aoc
     hs-source-dirs:      src
 
 library aoc
@@ -82,3 +82,7 @@ executable day10
 executable day11
     import:              aoc-common
     main-is:             2019-12-11.hs
+
+executable day12
+    import:              aoc-common
+    main-is:             2019-12-12.hs
