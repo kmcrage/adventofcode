@@ -32,7 +32,7 @@ initMachine intcode signal =
     }
 
 memory0 :: Machine -> Int
-memory0 m = (memory m) M.! 0
+memory0 m = memory m M.! 0
 
 memoryList :: Machine -> [Int]
 memoryList m = map (\p -> M.findWithDefault 0 p mem) [0..pmax]
