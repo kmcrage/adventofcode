@@ -1,3 +1,4 @@
+{- HLINT ignore: Use second -}
 import           Data.List.Split
 import qualified Data.Map        as M
 import           Debug.Trace
@@ -42,10 +43,10 @@ printHullChar p end xmin xmax hull
     printHullChar (xmin, snd p - 1) end xmin xmax hull
   | M.findWithDefault 0 p hull == 1 = do
     putStr "#"
-    printHullChar (1 + fst p, snd p) end xmin xmax hull
+    printHullChar (1 + fst p, snd p) end xmin xmax hull 
   | otherwise = do
     putStr " "
-    printHullChar (1 + fst p, snd p) end xmin xmax hull
+    printHullChar (1 + fst p, snd p) end xmin xmax hull 
 
 getHull :: [Int] -> Int -> Hull
 getHull ics tile = runRobot p d m hull
