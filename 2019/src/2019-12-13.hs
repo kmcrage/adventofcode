@@ -22,9 +22,7 @@ main :: IO ()
 main = do
   contents <- readFile "data/2019-12-13.dat"
   -- contents <- readFile "data/test.dat"
-  let intcodes = map read_int strcodes
-      read_int n = read n :: Int
-      strcodes = splitOn "," contents
+  let intcodes = readIntcode contents
       blocks = length . M.filter (== 2) $ playGame intcodes
       games = iterate playMoveAI $ initGameAI intcodes
       final = tail >>> dropWhile hasBlocks >>> head $ games

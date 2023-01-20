@@ -7,9 +7,7 @@ main :: IO ()
 main = do
   contents <- readFile "data/2019-12-07.dat"
   -- contents <- readFile "data/test.dat"
-  let intcode = map read_int strcodes
-      read_int n = read n :: Int
-      strcodes = splitOn "," contents
+  let intcode = readIntcode contents
       part_one = chainmaxOnce intcode 0 [0 .. 4]
       part_two = chainmax intcode 0 [5 .. 9]
   putStrLn $ "Max Signal: " ++ show part_one

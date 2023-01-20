@@ -1,6 +1,8 @@
 module IntCode where
 
-import qualified Data.Map as M
+import           Control.Arrow
+import           Data.List.Split
+import qualified Data.Map        as M
 
 data State
   = Running
@@ -35,7 +37,7 @@ memory0 :: Machine -> Int
 memory0 m = memory m M.! 0
 
 memoryList :: Machine -> [Int]
-memoryList m = map (\p -> M.findWithDefault 0 p mem) [0..pmax]
+memoryList m = map (\p -> M.findWithDefault 0 p mem) [0 .. pmax]
   where
     mem = memory m
     pmax = maximum $ M.keys mem
@@ -136,3 +138,8 @@ runInput rIdx xs input = replaceElementAt xs rIdx (head input)
 
 replaceElementAt :: M.Map Int Int -> Int -> Int -> M.Map Int Int
 replaceElementAt xs rIdx val = M.insert rIdx val xs
+
+readIntcode :: String -> [Int]
+readIntcode = splitOn "," >>> map read_int
+  where
+    read_int n = read n :: Int

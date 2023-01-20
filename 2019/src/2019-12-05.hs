@@ -6,9 +6,7 @@ main :: IO ()
 main = do
   contents <- readFile "data/2019-12-05.dat"
     -- contents <- readFile "data/test.dat"
-  let intcodes = map read_int strcodes
-      read_int n = read n :: Int
-      strcodes = splitOn "," contents
+  let intcodes = readIntcode contents
       part_one = runPrg intcodes [1]
       diagnostics_one = output part_one
       result_one = last diagnostics_one

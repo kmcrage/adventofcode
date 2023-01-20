@@ -28,8 +28,7 @@ fuelCreated :: RecipeBook -> Int -> Int
 fuelCreated recipes target = fuelBinSearch recipes target (div mx 2) mx
   where
     mx =
-      head . dropWhile (\n -> oreRequired recipes n < target) $
-      iterate (*2) 1
+      head . dropWhile (\n -> oreRequired recipes n < target) $ iterate (* 2) 1
 
 fuelBinSearch :: RecipeBook -> Int -> Int -> Int -> Int
 fuelBinSearch recipes target mn mx

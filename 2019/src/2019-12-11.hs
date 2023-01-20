@@ -14,9 +14,7 @@ type Hull = M.Map Coord Int
 main :: IO ()
 main = do
   contents <- readFile "data/2019-12-11.dat"
-  let intcodes = map read_int strcodes
-      read_int n = read n :: Int
-      strcodes = splitOn "," contents
+  let intcodes = readIntcode contents
       part_one = length $ getHull intcodes 0
       hull = getHull intcodes 1
   putStrLn $ "Result One: " ++ show part_one
