@@ -54,7 +54,7 @@ bfs halt visited (robot:queue)
     visited' = S.insert pos visited
     robot' = robot {machine = m'}
     queue' =
-      filter (\r -> S.notMember (position r) visited) $
+      filter (\r -> S.notMember (position r) visited') $
       queue ++ neighbours robot' -- not the most efficient, but handy for part two
 
 neighbours :: Robot -> [Robot]
