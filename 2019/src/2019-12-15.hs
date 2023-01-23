@@ -45,6 +45,7 @@ foundOxy robot = output (machine robot) == [2]
 bfs :: (Robot -> Bool) -> S.Set Coord -> [Robot] -> Robot
 bfs halt visited (robot:queue)
   | halt robot = robot -- this is for part one
+  -- | S.member pos visited = bfs halt visited queue -- this could confuse part two, prefilter instead
   | null queue' = robot -- this is the case where we search exhaustively i.e. part two
   | otherwise = bfs halt visited' queue'
   where
