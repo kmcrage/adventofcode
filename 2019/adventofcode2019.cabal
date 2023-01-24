@@ -98,3 +98,7 @@ executable day14
 executable day15
     import:              aoc-common
     main-is:             2019-12-15.hs
+
+executable day16
+    import:              aoc-common
+    main-is:             2019-12-16.hs
