@@ -24,39 +24,42 @@ main = do
       m = initMachine intcodes []
       m' = m {output = [1]}
       visited = S.empty :: S.Set Coord
-      final =
+      iRobot = Robot {machine = m', position = (0, 0), distance = 0}
+      oxyRobot =
         bfs
+          iRobot
           foundOxy
           visited
-          [Robot {machine = m', position = (0, 0), distance = 0}]
-      oxyPos = position final
-      oxyMachine = machine final -- need a machine initialised to the oxy cylinder position
+          [iRobot]
+      oxyPos = position oxyRobot
+      oxyMachine = machine oxyRobot -- need a machine initialised to the oxy cylinder position
+      oRobot = Robot {machine = oxyMachine, position = oxyPos, distance = 0}
       furthest =
         bfs
+          oRobot
           (const False) -- halt when we run out of candidates
           visited
-          [Robot {machine = oxyMachine, position = oxyPos, distance = 0}]
-  putStrLn $ "Distance to Oxygen: " ++ show (distance final)
+          [oRobot]
+  putStrLn $ "Distance to Oxygen: " ++ show (distance oxyRobot)
   putStrLn $ "Distance from Oxygen: " ++ show (distance furthest)
 
 foundOxy :: Robot -> Bool
 foundOxy robot = output (machine robot) == [2]
 
-bfs :: (Robot -> Bool) -> S.Set Coord -> [Robot] -> Robot
-bfs halt visited (robot:queue)
+bfs :: Robot -> (Robot -> Bool) -> S.Set Coord -> [Robot] -> Robot
+bfs prev halt visited (robot:queue)
   | halt robot = robot -- this is for part one
-  -- | S.member pos visited = bfs halt visited queue -- this could confuse part two, prefilter instead
+  | S.member pos visited && null queue = prev
+  | S.member pos visited = bfs prev halt visited queue 
   | null queue' = robot -- this is the case where we search exhaustively i.e. part two
-  | otherwise = bfs halt visited' queue'
+  | otherwise = bfs robot halt visited' queue'
   where
     pos = position robot
     m = machine robot
     m' = flushOutput m
     visited' = S.insert pos visited
     robot' = robot {machine = m'}
-    queue' =
-      filter (\r -> S.notMember (position r) visited') $
-      queue ++ neighbours robot' -- not the most efficient, but handy for part two
+    queue' = queue ++ neighbours robot' 
 
 neighbours :: Robot -> [Robot]
 neighbours robot = nhbrs
