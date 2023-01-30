@@ -25,30 +25,36 @@ data State =
     { position :: [Coord]
     , keys     :: Keys
     , distance :: Int
+    , active   :: Int
     }
   deriving (Show, Eq)
 
 main :: IO ()
 main = do
-  contents <- readFile "data/2019-12-18.dat"
-  -- contents <- readFile "data/test.dat"
+  -- contents <- readFile "data/2019-12-18.dat"
+  contents <- readFile "data/test.dat"
   let tunnels = parse contents
       part1 = solve tunnels
       tunnels' = updateTunnels tunnels
       part4 = solve tunnels'
   putStrLn $ "distance: " ++ show (distance part1)
-  -- putStrLn $ "distance, multi-robot: " ++ show (distance part4)
+  putStrLn $ "distance, multi-robot: " ++ show (distance part4)
 
 solve :: Tunnels -> State
-solve tunnels = astar tunnels target visited queue
+solve tunnels = astar tunnels estFn target visited queue
   where
     allSymbols = M.elems >>> S.fromList $ tunnels
     ks = S.filter (\c -> not $ C.isUpper c) allSymbols
     target = length ks + (length $ S.filter (C.isLower) allSymbols)
     visited = M.empty :: Visited
     start = starts tunnels
-    state = State {position = start, keys = ks, distance = 0}
-    queue = Q.singleton (estimate state) state
+    state = State {position = start, keys = ks, distance = 0, active = 0}
+    queue = Q.singleton (estFn state) state
+    estFn = estimateKeys target
+
+estimateKeys :: Int -> State -> Int
+estimateKeys target s = distance s + target - length (keys s)
+
 
 updateTunnels :: Tunnels -> Tunnels
 updateTunnels tunnels = tunnels''
@@ -65,13 +71,13 @@ updateTunnels tunnels = tunnels''
 starts :: Tunnels -> [Coord]
 starts = M.filter (== '@') >>> M.toList >>> map fst
 
-astar :: Tunnels -> Int -> Visited -> Queue -> State
-astar tunnels target visited q
-  | (>= target) . length . keys $ state' = state'
+astar :: Tunnels -> (State -> Int) -> Int -> Visited -> Queue -> State
+astar tunnels estFn target visited q
+  | (== target) . length . keys $ state' = state'
   | M.member (pos, ks') visited && visited M.! (pos, ks') <= d =
-    astar tunnels target visited queue
+    astar tunnels estFn target visited queue
   | null queue' = state
-  | otherwise = astar tunnels target visited' queue'
+  | otherwise = astar tunnels estFn target visited' queue'
   where
     ((_, state), queue) = Q.deleteFindMin q
     pos = position state
@@ -90,18 +96,21 @@ astar tunnels target visited q
                ks = keys s
                d = distance s
             in (not $ M.member (p, ks) visited') || visited' M.! (p, ks) > d) >>>
-      map (\s -> (estimate s, s)) >>> Q.fromList $
+      map (\s -> (estFn s, s)) >>> Q.fromList $
       state'
     queue' = Q.union queue nbhrs
 
-estimate :: State -> Int
-estimate s = distance s - length (keys s)
-
+{- pne active robot at a time, apart frpm at home, keys and locks -}
 neighbours :: Tunnels -> State -> [State]
-neighbours tunnels state =
-  concat . map (\i -> neighbourRobot i tunnels state) $ [0 .. (l - 1)]
+neighbours tunnels state
+  | allKeys = concatRobotNhbrs [0 .. (l - 1)]
+  | 0 == distance state = concatRobotNhbrs [0 .. (l - 1)]
+  | otherwise = concatRobotNhbrs [active state]
   where
-    l = length $ position state
+    pos = position state
+    l = length pos
+    allKeys = all (\p -> (C.isLower $ tunnels M.! p) || (tunnels M.! p == '@')) pos
+    concatRobotNhbrs = concat . map (\i -> neighbourRobot i tunnels state)
 
 neighbourRobot :: Int -> Tunnels -> State -> [State]
 neighbourRobot num tunnels state = nghbrs
@@ -120,6 +129,7 @@ neighbourRobot num tunnels state = nghbrs
            state
              { distance = 1 + d
              , position = (take num pos) ++ [c] ++ (drop (num + 1) pos)
+             , active = num
              })
         ncoords
 
@@ -152,11 +162,9 @@ user    0m1.207s
 sys     0m0.030s
 
 astar, dist - #keys:
-real    0m1.025s
-user    0m0.991s
-sys     0m0.026s
-
-
+real    0m0.216s
+user    0m0.183s
+sys     0m0.029s
 
 
 2019-12-18.dat
@@ -177,8 +185,8 @@ user    0m33.251s
 sys     0m0.459s
 
 astar, dist - #keys:
-real    0m34.336s
-user    0m33.875s
-sys     0m0.452s
+real    0m24.716s
+user    0m24.291s
+sys     0m0.457s
 
 -}
