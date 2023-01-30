@@ -211,4 +211,8 @@ real    21m52.478s
 user    20m29.648s
 sys     0m15.061s
 
+astar, branch on new key, single active robot:
+real    2m9.897s
+user    2m8.124s
+sys     0m1.459s
 -}
