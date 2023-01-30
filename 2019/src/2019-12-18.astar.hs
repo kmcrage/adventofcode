@@ -41,19 +41,31 @@ main = do
   putStrLn $ "distance, multi-robot: " ++ show (distance part4)
 
 solve :: Tunnels -> State
-solve tunnels = astar tunnels estFn target visited queue
+solve tunnels = astar tunnels estDFn target visited queue
   where
     allSymbols = M.elems >>> S.fromList $ tunnels
     ks = S.filter (\c -> not $ C.isUpper c) allSymbols
-    target = length ks + (length $ S.filter (C.isLower) allSymbols)
+    target = length ks + (length $ S.filter C.isLower allSymbols)
     visited = M.empty :: Visited
     start = starts tunnels
     state = State {position = start, keys = ks, distance = 0, active = 0}
     queue = Q.singleton (estFn state) state
     estFn = estimateKeys target
+    keyPos = M.filter (\k -> C.isLower k) >>> M.toList >>> map (\(a,b) -> (b,a)) >>> M.fromList $ tunnels 
+    estDFn = estimateDist keyPos target
 
 estimateKeys :: Int -> State -> Int
 estimateKeys target s = distance s + target - length (keys s)
+
+estimateDist :: M.Map Char Coord -> Int -> State -> Int
+estimateDist keyPos target s = distance s + keyDist + target - length (keys s)
+  where
+    ks = keys s
+    remaining = S.filter (\k -> S.notMember (C.toUpper k) ks) ks
+    keyDist = S.map (\k -> minDist (position s) (keyPos M.! k)) >>> maximum $ remaining
+
+minDist :: [Coord] -> Coord -> Int 
+minDist ps (i,j) = map (\(pi,pj) -> abs (pi-i) + abs (pj-j))  >>> minimum $ ps
 
 updateTunnels :: Tunnels -> Tunnels
 updateTunnels tunnels = tunnels''
@@ -188,5 +200,13 @@ astar, dist - #keys:
 real    0m24.716s
 user    0m24.291s
 sys     0m0.457s
+
+distance: 4668
+distance, multi-robot: 1910
+
+astar, dist + keydist - #keys:
+real    21m52.478s
+user    20m29.648s
+sys     0m15.061s
 
 -}
