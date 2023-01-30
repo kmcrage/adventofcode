@@ -41,11 +41,10 @@ main = do
   putStrLn $ "distance, multi-robot: " ++ show (distance part4)
 
 solve :: Tunnels -> State
-solve tunnels = astar tunnels estDFn target visited queue
+solve tunnels = astar tunnels estDFn haltFn visited queue
   where
     allSymbols = M.elems >>> S.fromList $ tunnels
     ks = S.filter (\c -> not $ C.isUpper c) allSymbols
-    target = length ks + (length $ S.filter C.isLower allSymbols)
     visited = M.empty :: Visited
     start = starts tunnels
     state = State {position = start, keys = ks, distance = 0, active = 0}
@@ -53,6 +52,10 @@ solve tunnels = astar tunnels estDFn target visited queue
     -- estFn = estimateKeys target
     keyPos = M.filter (\k -> C.isLower k) >>> M.toList >>> map (\(a,b) -> (b,a)) >>> M.fromList $ tunnels 
     estDFn = estimateDist keyPos 
+    haltFn = halt (length allSymbols)
+
+halt :: Int -> State -> Bool 
+halt target = (== target) . length . keys 
 
 estimateKeys :: Int -> State -> Int
 estimateKeys target s = distance s + target - length (keys s)
@@ -82,13 +85,13 @@ updateTunnels tunnels = tunnels''
 starts :: Tunnels -> [Coord]
 starts = M.filter (== '@') >>> M.toList >>> map fst
 
-astar :: Tunnels -> (State -> Int) -> Int -> Visited -> Queue -> State
-astar tunnels estFn target visited q
-  | (== target) . length . keys $ state' = state'
+astar :: Tunnels -> (State -> Int) -> (State -> Bool) -> Visited -> Queue -> State
+astar tunnels estFn haltFn visited q
+  | haltFn state' = state'
   | M.member (pos, ks') visited && visited M.! (pos, ks') <= d =
-    astar tunnels estFn target visited queue
+    astar tunnels estFn haltFn visited queue
   | null queue' = state
-  | otherwise = astar tunnels estFn target visited' queue'
+  | otherwise = astar tunnels estFn haltFn visited' queue'
   where
     ((_, state), queue) = Q.deleteFindMin q
     pos = position state
