@@ -110,8 +110,4 @@ executable day17
 
 executable day18
     import:              aoc-common
-    main-is:             2019-12-18.hs
-
-executable day18a
-    import:              aoc-common
     main-is:             2019-12-18.astar.hs

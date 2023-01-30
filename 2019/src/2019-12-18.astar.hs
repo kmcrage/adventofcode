@@ -26,13 +26,14 @@ data State =
     , keys     :: Keys
     , distance :: Int
     , active   :: Int
+    , newKey :: Bool 
     }
   deriving (Show, Eq)
 
 main :: IO ()
 main = do
-  -- contents <- readFile "data/2019-12-18.dat"
-  contents <- readFile "data/test.dat"
+  contents <- readFile "data/2019-12-18.dat"
+  -- contents <- readFile "data/test.dat"
   let tunnels = parse contents
       part1 = solve tunnels
       tunnels' = updateTunnels tunnels
@@ -47,9 +48,8 @@ solve tunnels = astar tunnels estDFn haltFn visited queue
     ks = S.filter (\c -> not $ C.isUpper c) allSymbols
     visited = M.empty :: Visited
     start = starts tunnels
-    state = State {position = start, keys = ks, distance = 0, active = 0}
+    state = State {position = start, keys = ks, distance = 0, active = 0, newKey=False}
     queue = Q.singleton (estDFn state) state
-    -- estFn = estimateKeys target
     keyPos = M.filter (\k -> C.isLower k) >>> M.toList >>> map (\(a,b) -> (b,a)) >>> M.fromList $ tunnels 
     estDFn = estimateDist keyPos 
     ksLower = S.filter (\c -> C.isLower c) allSymbols
@@ -103,7 +103,7 @@ astar tunnels estFn haltFn visited q
       map (\p -> tunnels M.! p) >>>
       filter C.isLower >>> map C.toUpper >>> foldr (\l k -> S.insert l k) ks $
       pos
-    state' = state {keys = ks'}
+    state' = state {keys = ks', newKey = ks /= ks'}
     nbhrs =
       neighbours tunnels >>>
       filter
@@ -119,17 +119,15 @@ astar tunnels estFn haltFn visited q
 {- pne active robot at a time, apart frpm at home, keys and locks -}
 neighbours :: Tunnels -> State -> [State]
 neighbours tunnels state
-  | allKeys = concatRobotNhbrs [0 .. (l - 1)]
+  | distance state == 0 = concatRobotNhbrs [0 .. (l - 1)]
+  | newKey state = concatRobotNhbrs [0 .. (l - 1)]
   | otherwise = concatRobotNhbrs [active state]
   where
-    pos = position state
-    l = length pos
-    allKeys =
-      all (\p -> (C.isLower $ tunnels M.! p) || (tunnels M.! p == '@')) pos
-    concatRobotNhbrs = concat . map (\i -> neighbourRobot i tunnels state)
+    l = length $ position state
+    concatRobotNhbrs = concat . map (neighbourRobot tunnels state)
 
-neighbourRobot :: Int -> Tunnels -> State -> [State]
-neighbourRobot num tunnels state = nghbrs
+neighbourRobot :: Tunnels -> State -> Int -> [State]
+neighbourRobot tunnels state num = nghbrs
   where
     pos = position state
     (i, j) = pos !! num
