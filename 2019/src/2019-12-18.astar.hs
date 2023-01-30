@@ -37,7 +37,7 @@ main = do
       part1 = solve tunnels
       tunnels' = updateTunnels tunnels
       part4 = solve tunnels'
-  putStrLn $ "distance: " ++ show (distance part1)
+  putStrLn $ "distance: " ++ show (distance part1) 
   putStrLn $ "distance, multi-robot: " ++ show (distance part4)
 
 solve :: Tunnels -> State
@@ -52,7 +52,8 @@ solve tunnels = astar tunnels estDFn haltFn visited queue
     -- estFn = estimateKeys target
     keyPos = M.filter (\k -> C.isLower k) >>> M.toList >>> map (\(a,b) -> (b,a)) >>> M.fromList $ tunnels 
     estDFn = estimateDist keyPos 
-    haltFn = halt (length allSymbols)
+    ksLower = S.filter (\c -> C.isLower c) allSymbols
+    haltFn = halt (length ks + length ksLower)
 
 halt :: Int -> State -> Bool 
 halt target = (== target) . length . keys 
