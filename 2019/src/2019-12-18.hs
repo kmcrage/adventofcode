@@ -26,10 +26,9 @@ data State =
   deriving (Show, Eq)
 
 main :: IO ()
-main
-  -- contents <- readFile "data/2019-12-18.dat"
- = do
-  contents <- readFile "data/test.dat"
+main = do
+  contents <- readFile "data/2019-12-18.dat"
+  -- contents <- readFile "data/test.dat"
   let tunnels = parse contents
       part1 = solve tunnels
       tunnels' = updateTunnels tunnels
@@ -85,11 +84,17 @@ bfs tunnels target visited (state:queue)
       neighbours tunnels state'
     queue' = queue ++ nbhrs
 
+{- pne active robot at a time, apart frpm at home, keys and locks -}
 neighbours :: Tunnels -> State -> [State]
-neighbours tunnels state =
-  concat . map (\i -> neighbourRobot i tunnels state) $ [0 .. (l - 1)]
+neighbours tunnels state
+  | null active = concatRobotNhbrs [0 .. (l - 1)]
+  | otherwise = concatRobotNhbrs active
   where
-    l = length $ position state
+    pos = position state
+    l = length pos
+    active =
+      filter (\(_, p) -> tunnels M.! p == '.') >>> map fst $ zip [0 ..] pos
+    concatRobotNhbrs = concat . map (\i -> neighbourRobot i tunnels state)
 
 neighbourRobot :: Int -> Tunnels -> State -> [State]
 neighbourRobot num tunnels state = nghbrs

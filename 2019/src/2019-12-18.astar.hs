@@ -31,8 +31,8 @@ data State =
 
 main :: IO ()
 main = do
-  -- contents <- readFile "data/2019-12-18.dat"
-  contents <- readFile "data/test.dat"
+  contents <- readFile "data/2019-12-18.dat"
+  -- contents <- readFile "data/test.dat"
   let tunnels = parse contents
       part1 = solve tunnels
       tunnels' = updateTunnels tunnels
@@ -54,7 +54,6 @@ solve tunnels = astar tunnels estFn target visited queue
 
 estimateKeys :: Int -> State -> Int
 estimateKeys target s = distance s + target - length (keys s)
-
 
 updateTunnels :: Tunnels -> Tunnels
 updateTunnels tunnels = tunnels''
@@ -85,7 +84,8 @@ astar tunnels estFn target visited q
     d = distance state
     visited' = M.insert (pos, ks') d visited
     ks' =
-      map (\p -> C.toUpper $ tunnels M.! p) >>> foldr (\l k -> S.insert l k) ks $
+      map (\p -> tunnels M.! p) >>>
+      filter C.isLower >>> map C.toUpper >>> foldr (\l k -> S.insert l k) ks $
       pos
     state' = state {keys = ks'}
     nbhrs =
@@ -104,12 +104,12 @@ astar tunnels estFn target visited q
 neighbours :: Tunnels -> State -> [State]
 neighbours tunnels state
   | allKeys = concatRobotNhbrs [0 .. (l - 1)]
-  | 0 == distance state = concatRobotNhbrs [0 .. (l - 1)]
   | otherwise = concatRobotNhbrs [active state]
   where
     pos = position state
     l = length pos
-    allKeys = all (\p -> (C.isLower $ tunnels M.! p) || (tunnels M.! p == '@')) pos
+    allKeys =
+      all (\p -> (C.isLower $ tunnels M.! p) || (tunnels M.! p == '@')) pos
     concatRobotNhbrs = concat . map (\i -> neighbourRobot i tunnels state)
 
 neighbourRobot :: Int -> Tunnels -> State -> [State]
