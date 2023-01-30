@@ -31,8 +31,8 @@ data State =
 
 main :: IO ()
 main = do
-  contents <- readFile "data/2019-12-18.dat"
-  -- contents <- readFile "data/test.dat"
+  -- contents <- readFile "data/2019-12-18.dat"
+  contents <- readFile "data/test.dat"
   let tunnels = parse contents
       part1 = solve tunnels
       tunnels' = updateTunnels tunnels
@@ -49,16 +49,16 @@ solve tunnels = astar tunnels estDFn target visited queue
     visited = M.empty :: Visited
     start = starts tunnels
     state = State {position = start, keys = ks, distance = 0, active = 0}
-    queue = Q.singleton (estFn state) state
-    estFn = estimateKeys target
+    queue = Q.singleton (estDFn state) state
+    -- estFn = estimateKeys target
     keyPos = M.filter (\k -> C.isLower k) >>> M.toList >>> map (\(a,b) -> (b,a)) >>> M.fromList $ tunnels 
-    estDFn = estimateDist keyPos target
+    estDFn = estimateDist keyPos 
 
 estimateKeys :: Int -> State -> Int
 estimateKeys target s = distance s + target - length (keys s)
 
-estimateDist :: M.Map Char Coord -> Int -> State -> Int
-estimateDist keyPos target s = distance s + keyDist + target - length (keys s)
+estimateDist :: M.Map Char Coord -> State -> Int
+estimateDist keyPos s = distance s + keyDist + length remaining
   where
     ks = keys s
     remaining = S.filter (\k -> S.notMember (C.toUpper k) ks) ks
