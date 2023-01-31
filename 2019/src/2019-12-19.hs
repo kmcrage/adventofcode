@@ -36,9 +36,7 @@ countInSquare :: [Int] -> Int -> Int
 countInSquare intcodes n = length hits
   where
     range = [0 .. (n - 1)]
-    hits =
-      map (\c -> 1 == beam intcodes c) >>> filter (id) $
-      [(x, y) | x <- range, y <- range]
+    hits = filter (\c -> 1 == beam intcodes c) [(x, y) | x <- range, y <- range]
 
 beam :: [Int] -> Coord -> Int
 beam intcodes (i, j) = head $ IC.output m
