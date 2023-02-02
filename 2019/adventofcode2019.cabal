@@ -119,3 +119,23 @@ executable day19
 executable day20
     import:              aoc-common
     main-is:             2019-12-20.hs
+
+executable day21
+    import:              aoc-common
+    main-is:             2019-12-21.hs
+
+executable day22
+    import:              aoc-common
+    main-is:             2019-12-22.hs
+
+executable day23
+    import:              aoc-common
+    main-is:             2019-12-23.hs
+
+executable day24
+    import:              aoc-common
+    main-is:             2019-12-24.hs
+
+executable day25
+    import:              aoc-common
+    main-is:             2019-12-25.hs
