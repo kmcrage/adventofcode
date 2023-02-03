@@ -126,6 +126,7 @@ executable day21
 
 executable day22
     import:              aoc-common
+    build-depends:       modular-arithmetic
     main-is:             2019-12-22.hs
 
 executable day23
