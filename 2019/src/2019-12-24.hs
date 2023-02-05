@@ -40,8 +40,13 @@ isBug bugs c
   | S.notMember c bugs && nghrs == 2 = True
   | otherwise = False
   where
+    invertI (i, j, k) = (4 - i, j, k)
+    flip (i, j, k) = (j, i, k)
+    nhbrS = invertI >>> nhbrN >>> map invertI
+    nhbrE = flip >>> nhbrS >>> map flip
+    nhbrW = flip >>> nhbrN >>> map flip
     nghrs =
-      S.fromList >>> S.toList >>> filter (`S.member` bugs) >>> length $
+      filter (`S.member` bugs) >>> length $
       nhbrN c ++ nhbrS c ++ nhbrE c ++ nhbrW c
 
 nhbrN :: Coord -> [Coord]
@@ -49,24 +54,6 @@ nhbrN (i, j, k)
   | i == 0 = [(1, 2, k + 1)]
   | i == 3 && j == 2 = [(4, a, k - 1) | a <- [0 .. 4]]
   | otherwise = [(i - 1, j, k)]
-
-nhbrS :: Coord -> [Coord]
-nhbrS (i, j, k)
-  | i == 4 = [(3, 2, k + 1)]
-  | i == 1 && j == 2 = [(0, a, k - 1) | a <- [0 .. 4]]
-  | otherwise = [(i + 1, j, k)]
-
-nhbrW :: Coord -> [Coord]
-nhbrW (i, j, k)
-  | j == 0 = [(2, 1, k + 1)]
-  | j == 3 && i == 2 = [(a, 4, k - 1) | a <- [0 .. 4]]
-  | otherwise = [(i, j - 1, k)]
-
-nhbrE :: Coord -> [Coord]
-nhbrE (i, j, k)
-  | j == 4 = [(2, 3, k + 1)]
-  | j == 1 && i == 2 = [(a, 0, k - 1) | a <- [0 .. 4]]
-  | otherwise = [(i, j + 1, k)]
 
 view :: Bugs -> String
 view bugs = map (viewL bugs) >>> intercalate "\n" $ [minK .. maxK]
