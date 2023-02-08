@@ -1,0 +1,147 @@
+cabal-version:      2.4
+name:               adventofcode2018
+version:            0.1.0.0
+
+-- A short (one-line) description of the package.
+-- synopsis:
+
+-- A longer description of the package.
+-- description:
+
+-- A URL where users can report bugs.
+-- bug-reports:
+
+-- The license under which the package is released.
+-- license:
+author:             kevin campbell
+maintainer:         kevin.campbellrage@gmail.com
+
+-- A copyright notice.
+-- copyright:
+-- category:
+extra-source-files: CHANGELOG.md
+
+common aoc-common
+    build-depends:       base, split, text, extra, containers, linear, pqueue
+    default-language:    Haskell2010
+    hs-source-dirs:      src
+
+
+-- library aoc
+--     exposed-modules:     IntCode
+--     hs-source-dirs:      intcode
+--     default-language:    Haskell2010
+--     build-depends:       base, split, text, containers
+
+-- test-suite intcode-test
+--     import:              aoc-common
+--     default-language:    Haskell2010
+--     hs-source-dirs:      test
+--     main-is:             Tests.hs
+--     type:                exitcode-stdio-1.0
+--     build-depends:       tasty, tasty-quickcheck, tasty-hunit
+
+executable day01
+    import:              aoc-common
+    main-is:             2018-12-01.hs
+
+executable day02
+    import:              aoc-common
+    main-is:             2018-12-02.hs
+
+executable day03
+    import:              aoc-common
+    main-is:             2018-12-03.hs
+
+executable day04
+    import:              aoc-common
+    main-is:             2018-12-04.hs
+
+executable day05
+    import:              aoc-common
+    main-is:             2018-12-05.hs
+
+executable day06
+    import:              aoc-common
+    main-is:             2018-12-06.hs
+
+executable day07
+    import:              aoc-common
+    main-is:             2018-12-07.hs
+
+executable day08
+    import:              aoc-common
+    main-is:             2018-12-08.hs
+
+executable day09
+    import:              aoc-common
+    main-is:             2018-12-09.hs
+
+executable day10
+    import:              aoc-common
+    main-is:             2018-12-10.hs
+
+executable day11
+    import:              aoc-common
+    main-is:             2018-12-11.hs
+
+executable day12
+    import:              aoc-common
+    main-is:             2018-12-12.hs
+
+executable day13
+    import:              aoc-common
+    main-is:             2018-12-13.hs
+
+executable day14
+    import:              aoc-common
+    main-is:             2018-12-14.hs
+
+executable day15
+    import:              aoc-common
+    main-is:             2018-12-15.hs
+
+executable day16
+    import:              aoc-common
+    main-is:             2018-12-16.hs 
+
+executable day17
+    import:              aoc-common
+    main-is:             2018-12-17.hs
+
+executable day18
+    import:              aoc-common
+    main-is:             2018-12-18.astar.hs
+
+executable day19
+    import:              aoc-common
+    main-is:             2018-12-19.hs
+
+executable day20
+    import:              aoc-common
+    main-is:             2018-12-20.hs
+
+executable day21
+    import:              aoc-common
+    main-is:             2018-12-21.hs
+
+executable day22
+    import:              aoc-common
+    build-depends:       modular-arithmetic
+    main-is:             2018-12-22.hs
+
+executable day23
+    import:              aoc-common
+    main-is:             2018-12-23.hs
+
+executable day24p1
+    import:              aoc-common
+    main-is:             2018-12-24.p1.hs
+
+executable day24
+    import:              aoc-common
+    main-is:             2018-12-24.hs
+
+executable day25
+    import:              aoc-common
+    main-is:             2018-12-25.hs
