@@ -7,56 +7,48 @@ import qualified Data.Map        as M
 import qualified Data.Set        as S
 import           Debug.Trace
 
-type Sleep = M.Map Int Int
+-- (guard, minute) = count
+type Sleep = M.Map (Int, Int) Int
 
 main :: IO ()
 main = do
   contents <- readFile "data/2018-12-04.dat"
-  -- contents <- readFile "data/test.dat"
-  let entries = lines  >>> L.sort $ contents
-      guard = sleepyGuard entries
-      (mins, _) = sleepyTime guard entries
-      part1 = guard * mins
-  putStrLn $ "Part 1: " ++ show part1 ++ " " ++ show guard ++ " " ++ show mins
+  --contents <- readFile "data/test.dat"
+  let sleep = parse contents
+      (guard, mn) = sleepyGuard sleep
+      part1 = guard * mn
+      (_, guard2, min2) = maxSleep sleep
+      part2 = guard2 * min2
+  putStrLn $ "Part 1: " ++ show part1
+  putStrLn $ "Part 2: " ++ show part2
 
-sleepyTime :: Int -> [String] -> (Int, Int) 
-sleepyTime guard items = (mins, mx)
+maxSleep :: Sleep -> (Int, Int, Int)
+maxSleep = M.toList >>> map (\((g, m), c) -> (c, g, m)) >>> L.sort >>> last
+
+sleepyGuard :: Sleep -> (Int, Int)
+sleepyGuard sleep = (guard, mn)
   where
-    sleep = timesAsleep guard M.empty 0 0 items
-    mx = maximum (M.elems sleep)
-    (mins,_) = M.filter (>= mx) >>> M.findMin $ sleep
+    gSleep =
+      M.foldrWithKey (\(g, _) c gs -> M.insertWith (+) g c gs) M.empty sleep
+    mx = M.elems >>> maximum $ gSleep
+    guard = M.filter (>= mx) >>> M.findMax >>> fst $ gSleep
+    minSleep = M.filterWithKey (\(g, _) _ -> g == guard) sleep
+    mx' = M.elems >>> maximum $ minSleep
+    mn = M.filter (>= mx') >>> M.findMax >>> fst >>> snd $ minSleep
 
 
-timesAsleep :: Int -> Sleep -> Int -> Int -> [String] -> Sleep
-timesAsleep _ sleep _ _ [] = sleep
-timesAsleep g sleep guard falls (item:items)
-  | tokens L.!! 2 == "Guard" = timesAsleep g sleep guard' falls items
-  | g /= guard = timesAsleep g sleep guard falls items
-  | tokens L.!! 2 == "falls" = timesAsleep g sleep guard mins items
-  | otherwise = timesAsleep g sleep' guard falls items
+
+parse :: String -> Sleep
+parse contents = parseLines M.empty 0 0 items
   where
-    tokens = L.splitOn " " item
-    guard' = drop 3 >>> head >>> filter (/= '#') >>> read @Int $ tokens
-    mins =
-      drop 1 >>>
-      head >>>
-      filter (/= ']') >>> L.splitOn ":" >>> drop 1 >>> head >>> read @Int $
-      tokens
-    sleep' = L.foldl' (\m t -> M.insertWith (+) t 1 m) sleep [falls..(mins-1)]
+    items = lines >>> L.sort $ contents
 
-sleepyGuard :: [String] -> Int
-sleepyGuard items = guard 
-  where 
-    sleep = timeSheet M.empty 0 0 items
-    mx = maximum (M.elems sleep)
-    (guard,_) = M.filter (>= mx) >>> M.findMin $ sleep
-
-timeSheet :: Sleep -> Int -> Int -> [String] -> Sleep
-timeSheet sleep _ _ [] = sleep
-timeSheet sleep guard falls (item:items)
-  | tokens L.!! 2 == "Guard" = timeSheet sleep guard' falls items
-  | tokens L.!! 2 == "falls" = timeSheet sleep guard mins items
-  | otherwise = timeSheet sleep' guard falls items
+parseLines :: Sleep -> Int -> Int -> [String] -> Sleep
+parseLines sleep _ _ [] = sleep
+parseLines sleep guard falls (item:items)
+  | tokens L.!! 2 == "Guard" = parseLines sleep guard' falls items
+  | tokens L.!! 2 == "falls" = parseLines sleep guard mins items
+  | otherwise = parseLines sleep' guard falls items
   where
     tokens = L.splitOn " " item
     guard' = drop 3 >>> head >>> filter (/= '#') >>> read @Int $ tokens
@@ -65,4 +57,8 @@ timeSheet sleep guard falls (item:items)
       head >>>
       filter (/= ']') >>> L.splitOn ":" >>> drop 1 >>> head >>> read @Int $
       tokens
-    sleep' = M.insertWith (+) guard (mins - falls) sleep
+    sleep' =
+      L.foldl'
+        (\m t -> M.insertWith (+) (guard, t) 1 m)
+        sleep
+        [falls .. (mins - 1)]
