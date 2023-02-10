@@ -36,8 +36,6 @@ sleepyGuard sleep = (guard, mn)
     mx' = M.elems >>> maximum $ minSleep
     mn = M.filter (>= mx') >>> M.findMax >>> fst >>> snd $ minSleep
 
-
-
 parse :: String -> Sleep
 parse contents = parseLines M.empty 0 0 items
   where
