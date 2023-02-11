@@ -31,15 +31,13 @@ paintMax :: Int -> [Coord] -> S.Set Coord -> [Coord] -> Int
 paintMax _ _ visited [] = length visited
 paintMax mx points visited (q:queue)
   | S.member q visited = paintMax mx points visited queue
-  | qpsum < mx = paintMax mx points visited' (queue ++ nhbrs)
+  | qpsum < mx = paintMax mx points visited' queue'
   | otherwise = paintMax mx points visited queue
   where
     qpsum = map (manDist q) >>> sum $ points
     visited' = S.insert q visited
     (i, j) = q
-    nhbrs =
-      map (\(di, dj) -> (i + di, j + dj)) >>> filter (`S.notMember` visited) $
-      [(0, 1), (0, -1), (1, 0), (-1, 0)]
+    queue' = queue ++ neighbours visited q
 
 avePt :: [Coord] -> Coord
 avePt pts = (div a l, div b l)
@@ -66,19 +64,22 @@ area bbox points mx (p:queue) = area bbox points mx' queue
 paint :: BBox -> Coord -> [Coord] -> S.Set Coord -> [Coord] -> Int
 paint _ _ _ visited [] = length visited
 paint bbox p points visited (q:queue)
-  | S.member q visited = paint bbox p points visited queue
-  | qp < qmin = paint bbox p points visited' (queue ++ nhbrs)
-  | i == imn || i == imx || j == jmn || j == jmx = 0
-  | otherwise = paint bbox p points visited queue
+  | S.member q visited = paint bbox p points visited queue -- already processed
+  | qp >= qmin = paint bbox p points visited queue -- outside region
+  | i == imn || i == imx || j == jmn || j == jmx = 0 -- inside region, at edge of bounds, therefore infinite
+  | otherwise = paint bbox p points visited' queue' --inside region, inside bounds
   where
+    (i,j) = q
     (imn, jmn, imx, jmx) = bbox
     qp = manDist q p
     qmin = filter (/= p) >>> map (manDist q) >>> minimum $ points
     visited' = S.insert q visited
-    (i, j) = q
-    nhbrs =
-      map (\(di, dj) -> (i + di, j + dj)) >>> filter (`S.notMember` visited) $
-      [(0, 1), (0, -1), (1, 0), (-1, 0)]
+    queue' = queue ++ neighbours visited q
+
+neighbours :: S.Set Coord -> Coord -> [Coord]
+neighbours visited (i, j) =
+  map (\(di, dj) -> (i + di, j + dj)) >>> filter (`S.notMember` visited) $
+  [(0, 1), (0, -1), (1, 0), (-1, 0)]
 
 manDist :: Coord -> Coord -> Int
 manDist (a, b) (c, d) = abs (a - c) + abs (b - d)
