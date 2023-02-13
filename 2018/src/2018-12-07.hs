@@ -14,6 +14,15 @@ type Requires = M.Map String (S.Set String)
 
 type Production = (Requires, Requires, Int, Int)
 
+data State =
+  State
+    { time   :: Int
+    , elves  :: [Int]
+    , found  :: S.Set String
+    , queue  :: Q.MinPQueue String String
+    , result :: String
+    }
+
 main :: IO ()
 main = do
   contents <- readFile "data/2018-12-07.dat"
@@ -26,34 +35,35 @@ main = do
   putStrLn $ "Part 2: " ++ show part2
 
 order :: Production -> (Int, String)
-order prod = search prod 0 [] S.empty queue "" 
+order prod = search prod state
   where
-    (provides, requires,_,_) = prod
+    (provides, requires, _, _) = prod
     starts = S.difference (M.keysSet provides) (M.keysSet requires)
     queue = S.toList >>> map (id &&& id) >>> Q.fromList $ starts
+    state =
+      State {time = 0, elves = [], found = S.empty, queue = queue, result = ""}
 
-search ::
-  Production
-  -> Int
-  -> [Int]
-  -> S.Set String
-  -> Q.MinPQueue String String
-  -> String
-  -> (Int, String)
-search prod time elves found queue result
-  | Q.null queue = (time, result) -- empty queue, all processed
-  | S.member step found = search prod time elves found queue'' result -- already processed 
-  | S.isSubsetOf (M.findWithDefault S.empty step requires) found =
-    search prod time elves found' queue' result' -- process
-  | otherwise = search prod time elves found queue'' result -- unforfilled prerequisites
+search :: Production -> State -> (Int, String)
+search prod state
+  | Q.null que = (tm, rslt) -- empty queue, all processed
+  | S.member step fnd = search prod state'' -- already processed
+  | hasReqs fnd = search prod state' -- process
+  | otherwise = search prod state'' -- unforfiled prerequisites
   where
-    (provides, requires, workers, duration) = prod 
-    ((_, step), queue'') = Q.deleteFindMin queue
-    result' = result ++ step
-    found' = S.insert step found
-    queue' =
-      S.toList >>> L.foldl' (\q s -> Q.insert s s q) queue $
+    (provides, requires, workers, duration) = prod
+    que = queue state
+    fnd = found state
+    tm = time state
+    rslt = result state
+    ((_, step), que'') = Q.deleteFindMin que
+    hasReqs =  S.isSubsetOf $ M.findWithDefault S.empty step requires
+    rslt' = rslt ++ step
+    fnd' = S.insert step fnd
+    que' =
+      S.toList >>> L.foldl' (\q s -> Q.insert s s q) que $
       M.findWithDefault S.empty step provides
+    state'' = state {queue = que''}
+    state' = state {found = fnd', queue = que', result = rslt'}
 
 parse :: String -> (Requires, Requires)
 parse input = (provides, requires)
