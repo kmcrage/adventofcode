@@ -98,16 +98,11 @@ parse :: String -> (Requires, Requires)
 parse input = (provides, requires)
   where
     pairs = lines >>> map parseLine $ input
-    provides =
-      L.foldr
-        (\(p, r) -> M.insertWith (S.union) p (S.singleton r))
-        M.empty
-        pairs
-    requires =
-      L.foldr
-        (\(p, r) -> M.insertWith (S.union) r (S.singleton p))
-        M.empty
-        pairs
+    flip = map (\(a, b) -> (b, a))
+    process =
+      L.foldr (\(p, r) -> M.insertWith (S.union) p (S.singleton r)) M.empty
+    provides = process pairs
+    requires = process . flip $ pairs
 
 parseLine :: String -> (C.Char, C.Char)
 parseLine line = (pre, post)
