@@ -10,29 +10,29 @@ import qualified Data.PQueue.Prio.Min as Q
 import qualified Data.Set             as S
 import           Debug.Trace
 
-type Requires = M.Map String (S.Set String)
+type Requires = M.Map C.Char (S.Set C.Char)
 
 type Production = (Requires, Requires, Int, Int)
 
 data State =
   State
     { time   :: Int
-    , elves  :: [Int]
-    , found  :: S.Set String
-    , queue  :: Q.MinPQueue String String
+    , found  :: S.Set C.Char
+    , elves  :: Q.MinPQueue Int C.Char -- time, char
+    , queue  :: Q.MinPQueue C.Char C.Char
     , result :: String
     }
 
 main :: IO ()
 main = do
   contents <- readFile "data/2018-12-07.dat"
-  --contents <- readFile "data/test.dat"
+  -- contents <- readFile "data/test.dat"
   let (provides, requires) = parse contents
       part1 = order (provides, requires, 1, 0)
-      part2 = order (provides, requires, 2, 0) -- test
-      -- part2 = order (provides, requires, 5, 60)
-  putStrLn $ "Part 1: " ++ show part1
-  putStrLn $ "Part 2: " ++ show part2
+      -- part2 = order (provides, requires, 2, 0) -- test
+      part2 = order (provides, requires, 5, 60)
+  putStrLn $ "Part 1, 1 worker, 0s delay: " ++ show part1
+  putStrLn $ "Part 2, 5 workers, 60s delay: " ++ show part2
 
 order :: Production -> (Int, String)
 order prod = search prod state
@@ -41,29 +41,58 @@ order prod = search prod state
     starts = S.difference (M.keysSet provides) (M.keysSet requires)
     queue = S.toList >>> map (id &&& id) >>> Q.fromList $ starts
     state =
-      State {time = 0, elves = [], found = S.empty, queue = queue, result = ""}
+      State
+        {time = 0, elves = Q.empty, found = S.empty, queue = queue, result = ""}
 
 search :: Production -> State -> (Int, String)
 search prod state
-  | Q.null que = (tm, rslt) -- empty queue, all processed
-  | S.member step fnd = search prod state'' -- already processed
-  | hasReqs fnd = search prod state' -- process
-  | otherwise = search prod state'' -- unforfiled prerequisites
+  | null elfs && Q.null que = (tm, rslt) -- empty queues, all processed
+  | Q.null que = processElf prod state
+  | length elfs == workers = processElf prod state
+  | otherwise = processQueue prod state
   where
-    (provides, requires, workers, duration) = prod
+    (_, _, workers, _) = prod
     que = queue state
-    fnd = found state
+    elfs = elves state
     tm = time state
     rslt = result state
-    ((_, step), que'') = Q.deleteFindMin que
-    hasReqs =  S.isSubsetOf $ M.findWithDefault S.empty step requires
-    rslt' = rslt ++ step
+
+processQueue :: Production -> State -> (Int, String)
+processQueue prod state
+  | S.member step fnd = search prod state' -- already processed
+  | hasReqs = search prod stateE -- elf can start work
+  | otherwise = search prod state'
+  where
+    (provides, requires, workers, duration) = prod
+    ((_, step), que) = Q.deleteFindMin $ queue state
+    fnd = found state
+    --
+    state' = state {queue = que}
+    --
+    hasReqs = S.isSubsetOf (M.findWithDefault S.empty step requires) fnd
+    elves' = elves >>> Q.insert (duration + C.ord step - 64) step $ state
+    stateE = state' {elves = elves'}
+
+processElf :: Production -> State -> (Int, String)
+processElf prod state
+  | S.member step fnd = search prod state' -- already processed
+  | otherwise = search prod stateQ
+  where
+    (provides, requires, workers, duration) = prod
+    ((t, step), elfs) = Q.deleteFindMin $ elves state
+    que = queue state
+    fnd = found state
+    --
+    time' = t + time state
+    elfs' = Q.mapKeysMonotonic (subtract t) elfs
+    state' = state {elves = elfs', time = time'}
+    --
     fnd' = S.insert step fnd
+    rslt = result state ++ [step]
     que' =
-      S.toList >>> L.foldl' (\q s -> Q.insert s s q) que $
+      S.toList >>> L.foldr (\s -> Q.insert s s) que $
       M.findWithDefault S.empty step provides
-    state'' = state {queue = que''}
-    state' = state {found = fnd', queue = que', result = rslt'}
+    stateQ = state' {queue = que', result = rslt, found = fnd'}
 
 parse :: String -> (Requires, Requires)
 parse input = (provides, requires)
@@ -80,9 +109,9 @@ parse input = (provides, requires)
         M.empty
         pairs
 
-parseLine :: String -> (String, String)
+parseLine :: String -> (C.Char, C.Char)
 parseLine line = (pre, post)
   where
     tokens = words line
-    pre = tokens !! 1
-    post = tokens !! 7
+    pre = head $ tokens !! 1
+    post = head $ tokens !! 7
