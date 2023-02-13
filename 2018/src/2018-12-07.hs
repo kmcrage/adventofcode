@@ -12,7 +12,13 @@ import           Debug.Trace
 
 type Requires = M.Map C.Char (S.Set C.Char)
 
-type Production = (Requires, Requires, Int, Int)
+data Production =
+  Production
+    { provides :: Requires
+    , requires :: Requires
+    , workers  :: Int
+    , duration :: Int
+    }
 
 data State =
   State
@@ -27,18 +33,21 @@ main :: IO ()
 main = do
   contents <- readFile "data/2018-12-07.dat"
   -- contents <- readFile "data/test.dat"
-  let (provides, requires) = parse contents
-      part1 = order (provides, requires, 1, 0)
-      -- part2 = order (provides, requires, 2, 0) -- test
-      part2 = order (provides, requires, 5, 60)
+  let (prov, reqs) = parse contents
+      prod =
+        Production {provides = prov, requires = reqs, workers = 1, duration = 0}
+      part1 = order prod
+      -- part2 = order prod {workers=2} -- test
+      part2 = order prod {workers = 5, duration = 60}
   putStrLn $ "Part 1, 1 worker, 0s delay: " ++ show part1
   putStrLn $ "Part 2, 5 workers, 60s delay: " ++ show part2
 
 order :: Production -> (Int, String)
 order prod = search prod state
   where
-    (provides, requires, _, _) = prod
-    starts = S.difference (M.keysSet provides) (M.keysSet requires)
+    prov = provides prod
+    reqs = requires prod
+    starts = S.difference (M.keysSet prov) (M.keysSet reqs)
     queue = S.toList >>> map (id &&& id) >>> Q.fromList $ starts
     state =
       State
@@ -48,10 +57,10 @@ search :: Production -> State -> (Int, String)
 search prod state
   | null elfs && Q.null que = (tm, rslt) -- empty queues, all processed
   | Q.null que = processElf prod state
-  | length elfs == workers = processElf prod state
+  | length elfs == wrkrs = processElf prod state
   | otherwise = processQueue prod state
   where
-    (_, _, workers, _) = prod
+    wrkrs = workers prod
     que = queue state
     elfs = elves state
     tm = time state
@@ -63,14 +72,15 @@ processQueue prod state
   | hasReqs = search prod stateE -- elf can start work
   | otherwise = search prod state'
   where
-    (provides, requires, workers, duration) = prod
+    reqs = requires prod
+    durn = duration prod
     ((_, step), que) = Q.deleteFindMin $ queue state
     fnd = found state
     --
     state' = state {queue = que}
     --
-    hasReqs = S.isSubsetOf (M.findWithDefault S.empty step requires) fnd
-    elves' = elves >>> Q.insert (duration + C.ord step - 64) step $ state
+    hasReqs = S.isSubsetOf (M.findWithDefault S.empty step reqs) fnd
+    elves' = elves >>> Q.insert (durn + C.ord step - 64) step $ state
     stateE = state' {elves = elves'}
 
 processElf :: Production -> State -> (Int, String)
@@ -78,7 +88,7 @@ processElf prod state
   | S.member step fnd = search prod state' -- already processed
   | otherwise = search prod stateQ
   where
-    (provides, requires, workers, duration) = prod
+    prov = provides prod
     ((t, step), elfs) = Q.deleteFindMin $ elves state
     que = queue state
     fnd = found state
@@ -91,7 +101,7 @@ processElf prod state
     rslt = result state ++ [step]
     que' =
       S.toList >>> L.foldr (\s -> Q.insert s s) que $
-      M.findWithDefault S.empty step provides
+      M.findWithDefault S.empty step prov
     stateQ = state' {queue = que', result = rslt, found = fnd'}
 
 parse :: String -> (Requires, Requires)
