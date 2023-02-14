@@ -75,6 +75,7 @@ executable day08
 
 executable day09
     import:              aoc-common
+    build-depends:       pointedlist
     main-is:             2018-12-09.hs
 
 executable day10
