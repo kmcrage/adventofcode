@@ -13,8 +13,7 @@ type Coord = (Int, Int)
 type Point = (Coord, Coord)
 
 main :: IO ()
-main
- = do
+main = do
   contents <- readFile "data/2018-12-10.dat"
   -- contents <- readFile "data/test.dat"
   let pts = parse contents
@@ -63,8 +62,5 @@ parse = lines >>> map parseLine
 parseLine :: String -> Point
 parseLine line = ((a, b), (c, d))
   where
-    tokens = splitOnAnyOf ["<", ">", ","] line
+    tokens = L.splitOneOf "<>," line
     (a:b:c:d:_) = map (tokens L.!!) >>> map (read @Int) $ [1, 2, 4, 5]
-
-splitOnAnyOf :: Eq a => [[a]] -> [a] -> [[a]]
-splitOnAnyOf ds xs = L.foldl' (\ys d -> ys >>= L.splitOn d) [xs] ds
