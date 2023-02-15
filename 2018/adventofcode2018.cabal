@@ -84,6 +84,7 @@ executable day10
 
 executable day11
     import:              aoc-common
+    build-depends:       MemoTrie
     main-is:             2018-12-11.hs
 
 executable day12
