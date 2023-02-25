@@ -149,28 +149,28 @@ astar cave targets visited q results
   | null q && null results = Nothing
   | null q = getResult results
   | null targets = Nothing
-  | length results > 0 && d > (hpath . head $ results) = getResult results
+  | length results > 0 && estimate > (estimator . head $ results) =
+    getResult results
   | S.member pos targets = astar cave targets visited queue (unit : results)
-  | M.member (vis unit) visited && visited M.! (vis unit) <= hpath unit =
+  | M.member v visited && visited M.! v <= estimate =
     astar cave targets visited queue results
   | otherwise = astar cave targets visited' queue' results
   where
-    ((_, unit), queue) = Q.deleteFindMin q
+    ((estimate, unit), queue) = Q.deleteFindMin q
     pos = position unit
-    d = length . path $ unit
-    vis = position &&& head . path
-    visited' = M.insert (vis unit) (hpath unit) visited
+    visitor = position &&& head . path
+    v = visitor unit
+    estimator = uncurry (+) . (length . path &&& estDist targets)
+    visited' = M.insert v estimate visited
     nbhrs =
       neighbours cave >>>
       filter
         (\u ->
-           let v = vis u
-            in (not $ M.member v visited') || visited' M.! v >= hpath u) >>>
-      map (\u -> (d + 1 + estDist targets u, u)) >>> Q.fromList $
+           let v = visitor u
+            in (not $ M.member v visited') || visited' M.! v > estimator u) >>>
+      map (estimator &&& id) >>> Q.fromList $
       unit
     queue' = Q.union queue nbhrs
-    -- hpath = (length . path &&& id)
-    hpath = length . path
     getResult = Just . head . L.sort
 
 estDist :: Cave -> Unit -> Int
