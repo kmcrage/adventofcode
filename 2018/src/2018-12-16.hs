@@ -38,31 +38,28 @@ main
   -- contents <- readFile "data/test.dat"
  = do
   contents <- readFile "data/2018-12-16.dat"
-  let (samples,prg) = parse contents
+  let (samples, prg) = parse contents
       pt1 = matches 3 samples
       ops = opMap samples
-      pt2 = runPrg ops [0,0,0,0] prg 
+      pt2 = runPrg ops [0, 0, 0, 0] prg
   putStrLn $ ">=3 Matches: " ++ show pt1
   putStrLn $ "OpMap: " ++ show ops
   putStrLn $ "Result: " ++ show pt2
 
 runPrg :: OpMap -> [Int] -> [[Int]] -> [Int]
 runPrg _ reg [] = reg
-runPrg ops reg (p:prg) = runPrg ops reg' prg 
+runPrg ops reg (p:prg) = runPrg ops reg' prg
   where
     (op:a:b:c:_) = p
-    reg' = runOp (ops M.! op)  (a:b:c:[]) reg
+    reg' = runOp (ops M.! op) (a : b : c : []) reg
 
 opMap :: [Sample] -> OpMap
 opMap samples = opMap' M.empty intToOps
   where
-    intToOps =
-      L.foldl'
-        (\m (b, op:args, a) ->
-           M.insertWith (S.intersection) op (testAllOps (b, op : args, a)) m)
-        M.empty
-        samples
-    
+    intToOps = L.foldr process M.empty samples
+    process (b, op:args, a) =
+      M.insertWith (S.intersection) op (testAllOps (b, op : args, a))
+
 opMap' :: M.Map Int Op -> M.Map Int (S.Set Op) -> M.Map Int Op
 opMap' opmap iop
   | null iop = opmap
@@ -95,13 +92,13 @@ runOp op (a:b:c:_) registers
   | op == Borr = replaceAt registers c $ registers L.!! a B..|. registers L.!! b
   | op == Bori = replaceAt registers c $ registers L.!! a B..|. b
   | op == Setr = replaceAt registers c $ registers L.!! a
-  | op == Seti = replaceAt registers c a 
-  | op == Gtri && registers L.!! a > b = replaceAt registers c 1 
-  | op == Gtir && a > registers L.!! b = replaceAt registers c 1 
-  | op == Gtrr && registers L.!! a > registers L.!! b = replaceAt registers c 1 
-  | op == Eqri && registers L.!! a == b = replaceAt registers c 1 
-  | op == Eqir && a == registers L.!! b = replaceAt registers c 1 
-  | op == Eqrr && registers L.!! a == registers L.!! b = replaceAt registers c 1 
+  | op == Seti = replaceAt registers c a
+  | op == Gtri && registers L.!! a > b = replaceAt registers c 1
+  | op == Gtir && a > registers L.!! b = replaceAt registers c 1
+  | op == Gtrr && registers L.!! a > registers L.!! b = replaceAt registers c 1
+  | op == Eqri && registers L.!! a == b = replaceAt registers c 1
+  | op == Eqir && a == registers L.!! b = replaceAt registers c 1
+  | op == Eqrr && registers L.!! a == registers L.!! b = replaceAt registers c 1
   | otherwise = replaceAt registers c 0
 
 replaceAt :: [a] -> Int -> a -> [a]
@@ -113,22 +110,22 @@ parse :: String -> ([Sample], [[Int]])
 parse input = (samples, prog)
   where
     (sinput:pinput:_) = L.splitOn "\n\n\n" input
-    samples = parseSamples [] $ lines sinput 
-    prog = parseProg $ lines pinput 
+    samples = parseSamples $ lines sinput
+    prog = parseProg $ lines pinput
 
 parseProg :: [String] -> [[Int]]
-parseProg = map (map read . L.splitOn " ") . filter (/="")  
+parseProg = map (map read . L.splitOn " ") . filter (/= "")
 
-parseSamples :: [Sample] -> [String] -> [Sample]
-parseSamples samples lines
-  | null lines = samples
-  | head tokensBefore == "" = parseSamples samples $ tail lines
-  | head tokensBefore == "Before" = parseSamples samples' $ drop 3 lines
-  | otherwise = samples
+parseSamples :: [String] -> [Sample]
+parseSamples [] = []
+parseSamples (line:lines)
+  | head tokensBefore == "" = parseSamples lines
+  | head tokensBefore == "Before" =
+    (before, ops, after) : parseSamples (drop 2 lines)
+  | otherwise = []
   where
-    tokensBefore = L.splitOn ":" . head $ lines
+    tokensBefore = L.splitOn ":" line
     before = read (last tokensBefore) :: [Int]
-    ops = map (read @Int) . L.splitOn " " . head . drop 1 $ lines
-    tokensAfter = L.splitOn ":" . head . drop 2 $ lines
+    ops = map (read @Int) . L.splitOn " " . head $ lines
+    tokensAfter = L.splitOn ":" . head . drop 1 $ lines
     after = read (last tokensAfter) :: [Int]
-    samples' = samples ++ [(before, ops, after)]
