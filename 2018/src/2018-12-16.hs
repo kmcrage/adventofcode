@@ -50,7 +50,7 @@ runPrg :: OpMap -> [Int] -> [[Int]] -> [Int]
 runPrg _ reg [] = reg
 runPrg ops reg (p:prg) = runPrg ops reg' prg 
   where
-    (op:a:b:c:_) = p 
+    (op:a:b:c:_) = p
     reg' = runOp (ops M.! op)  (a:b:c:[]) reg
 
 opMap :: [Sample] -> OpMap
@@ -112,17 +112,19 @@ replaceAt list i newElement = pre ++ newElement : post
 parse :: String -> ([Sample], [[Int]])
 parse input = (samples, prog)
   where
-    (samples, lines') = parseSamples [] $ lines input 
-    prog = parseProg lines' 
+    (sinput:pinput:_) = L.splitOn "\n\n\n" input
+    samples = parseSamples [] $ lines sinput 
+    prog = parseProg $ lines pinput 
 
 parseProg :: [String] -> [[Int]]
-parseProg = map (map read . L.splitOn " ")  
+parseProg = map (map read . L.splitOn " ") . filter (/="")  
 
-parseSamples :: [Sample] -> [String] -> ([Sample], [String])
+parseSamples :: [Sample] -> [String] -> [Sample]
 parseSamples samples lines
+  | null lines = samples
   | head tokensBefore == "" = parseSamples samples $ tail lines
   | head tokensBefore == "Before" = parseSamples samples' $ drop 3 lines
-  | otherwise = (samples, lines)
+  | otherwise = samples
   where
     tokensBefore = L.splitOn ":" . head $ lines
     before = read (last tokensBefore) :: [Int]
