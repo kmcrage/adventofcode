@@ -86,26 +86,26 @@ testOp (a:b:c:_) before after op = runOp op (a : b : [c]) before == after
 
 runOp :: Op -> [Int] -> [Int] -> [Int]
 runOp op (a:b:c:_) registers
-  | op == Addr = replaceAt c (registers L.!! a + registers L.!! b) registers
-  | op == Addi = replaceAt c (registers L.!! a + b) registers
-  | op == Mulr = replaceAt c (registers L.!! a * registers L.!! b) registers
-  | op == Muli = replaceAt c (registers L.!! a * b) registers
-  | op == Banr = replaceAt c (registers L.!! a B..&. registers L.!! b) registers
-  | op == Bani = replaceAt c (registers L.!! a B..&. b) registers
-  | op == Borr = replaceAt c (registers L.!! a B..|. registers L.!! b) registers
-  | op == Bori = replaceAt c (registers L.!! a B..|. b) registers
-  | op == Setr = replaceAt c (registers L.!! a) registers
-  | op == Seti = replaceAt c a registers
-  | op == Gtri && registers L.!! a > b = replaceAt c 1 registers
-  | op == Gtir && a > registers L.!! b = replaceAt c 1 registers
-  | op == Gtrr && registers L.!! a > registers L.!! b = replaceAt c 1 registers
-  | op == Eqri && registers L.!! a == b = replaceAt c 1 registers
-  | op == Eqir && a == registers L.!! b = replaceAt c 1 registers
-  | op == Eqrr && registers L.!! a == registers L.!! b = replaceAt c 1 registers
-  | otherwise = replaceAt c 0 registers
+  | op == Addr = replaceAt registers c $ registers L.!! a + registers L.!! b
+  | op == Addi = replaceAt registers c $ registers L.!! a + b
+  | op == Mulr = replaceAt registers c $ registers L.!! a * registers L.!! b
+  | op == Muli = replaceAt registers c $ registers L.!! a * b
+  | op == Banr = replaceAt registers c $ registers L.!! a B..&. registers L.!! b
+  | op == Bani = replaceAt registers c $ registers L.!! a B..&. b
+  | op == Borr = replaceAt registers c $ registers L.!! a B..|. registers L.!! b
+  | op == Bori = replaceAt registers c $ registers L.!! a B..|. b
+  | op == Setr = replaceAt registers c $ registers L.!! a
+  | op == Seti = replaceAt registers c a 
+  | op == Gtri && registers L.!! a > b = replaceAt registers c 1 
+  | op == Gtir && a > registers L.!! b = replaceAt registers c 1 
+  | op == Gtrr && registers L.!! a > registers L.!! b = replaceAt registers c 1 
+  | op == Eqri && registers L.!! a == b = replaceAt registers c 1 
+  | op == Eqir && a == registers L.!! b = replaceAt registers c 1 
+  | op == Eqrr && registers L.!! a == registers L.!! b = replaceAt registers c 1 
+  | otherwise = replaceAt registers c 0
 
-replaceAt :: Int -> a -> [a] -> [a]
-replaceAt i newElement list = pre ++ newElement : post
+replaceAt :: [a] -> Int -> a -> [a]
+replaceAt list i newElement = pre ++ newElement : post
   where
     (pre, a:post) = L.splitAt i list
 
