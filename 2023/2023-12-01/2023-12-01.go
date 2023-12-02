@@ -9,22 +9,19 @@ import (
 	"strconv"
 )
 
-var nums = map[string]int{
-	"one":   1,
-	"two":   2,
-	"three": 3,
-	"four":  4,
-	"five":  5,
-	"six":   6,
-	"seven": 7,
-	"eight": 8,
-	"nine":  9,
-}
-
-var digits_re = regexp.MustCompile("[0-9]")
-var nums_re = regexp.MustCompile("[0-9]|one|two|three|four|five|six|seven|eight|nine")
-
 func numtoi(s string) int {
+	nums := map[string]int{
+		"one":   1,
+		"two":   2,
+		"three": 3,
+		"four":  4,
+		"five":  5,
+		"six":   6,
+		"seven": 7,
+		"eight": 8,
+		"nine":  9,
+	}
+
 	ret := 0
 	if value, ok := nums[s]; ok {
 		ret = value
@@ -35,6 +32,7 @@ func numtoi(s string) int {
 }
 
 func part1(line string) int {
+	digits_re := regexp.MustCompile("[0-9]")
 	digits := digits_re.FindAllString(line, -1)
 
 	a, _ := strconv.Atoi(digits[0])
@@ -44,6 +42,7 @@ func part1(line string) int {
 }
 
 func part2(line string) int {
+	var nums_re = regexp.MustCompile("[0-9]|one|two|three|four|five|six|seven|eight|nine")
 	var nums []int
 	for {
 		idx := nums_re.FindStringIndex(line)
