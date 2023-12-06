@@ -34,11 +34,6 @@ func readRaces(file string, mode int) ([]int, []int) {
 	return times, distances
 }
 
-func part(file string, mode int) int {
-	times, distances := readRaces(file, mode)
-	return race(times, distances)
-}
-
 func race(times []int, distances []int) int {
 	result := 1
 	for i, time := range times {
@@ -57,6 +52,9 @@ func main() {
 	//file := "test.dat"
 	file := "2023-12-06.dat"
 
-	fmt.Println("part 1: ", part(file, 1))
-	fmt.Println("part 2: ", part(file, 2))
+	times, distances := readRaces(file, 1)
+	fmt.Println("part 1: ", race(times, distances))
+
+	times, distances = readRaces(file, 2)
+	fmt.Println("part 2: ", race(times, distances))
 }
