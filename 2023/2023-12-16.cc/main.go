@@ -8,10 +8,21 @@ import (
 	"sync"
 )
 
+const (
+	Right = 1
+	Left = 3
+)
+
+const (
+	North = iota
+	East
+	South
+	West
+)
 type State struct {
 	X         int
 	Y         int
-	Direction string
+	Direction int
 }
 
 func parse(file string) ([][]rune, error) {
@@ -37,7 +48,7 @@ func parse(file string) ([][]rune, error) {
 func count(visited map[State]bool) int {
 	tiles := make(map[State]bool, len(visited))
 	for s := range visited {
-		s.Direction = "N"
+		s.Direction = North
 		tiles[s] = true
 	}
 	return len(tiles) - 1
@@ -50,63 +61,47 @@ func energised(mirrors [][]rune, start State) int {
 	for len(queue) > 0 {
 		state := queue[0]
 		queue = queue[1:]
-		if visited[state] {
-			continue
-		}
-		visited[state] = true
+		for {
+			if visited[state] {
+				break
+			}
+			visited[state] = true
 
-		switch state.Direction {
-		case "N":
-			state.X -= 1
-		case "S":
-			state.X += 1
-		case "E":
-			state.Y += 1
-		case "W":
-			state.Y -= 1
-		}
+			if state.Direction%2 == 0 {
+				state.X += state.Direction - 1
+			} else {
+				state.Y += 2 - state.Direction
+			}
 
-		if 0 > state.X || state.X >= len(mirrors) || 0 > state.Y || state.Y >= len(mirrors[0]) {
-			continue
-		}
+			if 0 > state.X || state.X >= len(mirrors) || 0 > state.Y || state.Y >= len(mirrors[0]) {
+				break
+			}
 
-		switch mirrors[state.X][state.Y] {
-		case '|':
-			switch state.Direction {
-			case "E", "W":
-				state.Direction = "N"
-				queue = append(queue, State{state.X, state.Y, "S"})
-			}
-		case '-':
-			switch state.Direction {
-			case "N", "S":
-				state.Direction = "E"
-				queue = append(queue, State{state.X, state.Y, "W"})
-			}
-		case '/':
-			switch state.Direction {
-			case "N":
-				state.Direction = "E"
-			case "S":
-				state.Direction = "W"
-			case "E":
-				state.Direction = "N"
-			case "W":
-				state.Direction = "S"
-			}
-		case '\\':
-			switch state.Direction {
-			case "N":
-				state.Direction = "W"
-			case "S":
-				state.Direction = "E"
-			case "E":
-				state.Direction = "S"
-			case "W":
-				state.Direction = "N"
+			switch mirrors[state.X][state.Y] {
+			case '|':
+				if state.Direction%2 == 1{
+					state.Direction = North
+					queue = append(queue, State{state.X, state.Y, South})
+				}
+			case '-':
+				if state.Direction%2 == 0{
+					state.Direction = East
+					queue = append(queue, State{state.X, state.Y, West})
+				}
+			case '/':
+				if state.Direction%2 == 0{
+					state.Direction = (state.Direction + Right) % 4
+				}else{
+					state.Direction = (state.Direction + Left) % 4
+				}
+			case '\\':
+				if state.Direction%2 == 0{
+					state.Direction = (state.Direction + Left) % 4
+				}else{
+					state.Direction = (state.Direction + Right) % 4
+				}
 			}
 		}
-		queue = append(queue, state)
 	}
 	return count(visited)
 }
@@ -121,13 +116,13 @@ func maximise(mirrors [][]rune) int {
 	ch := make(chan int, 2*len(mirrors)+2*len(mirrors[0])) // Creating an buffered channel
 	for i := range mirrors {
 		wg.Add(2)
-		go worker(ch, &wg, mirrors, State{i, -1, "E"})
-		go worker(ch, &wg, mirrors, State{i, len(mirrors[0]), "W"})
+		go worker(ch, &wg, mirrors, State{i, -1, East})
+		go worker(ch, &wg, mirrors, State{i, len(mirrors[0]), West})
 	}
 	for j := range mirrors[0] {
 		wg.Add(2)
-		go worker(ch, &wg, mirrors, State{-1, j, "S"})
-		go worker(ch, &wg, mirrors, State{len(mirrors), j, "N"})
+		go worker(ch, &wg, mirrors, State{-1, j, South})
+		go worker(ch, &wg, mirrors, State{len(mirrors), j, North})
 	}
 
 	go func() {
@@ -151,7 +146,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Println("part 1:", energised(mirrors, State{0, -1, "E"}))
+	fmt.Println("part 1:", energised(mirrors, State{0, -1, East}))
 	fmt.Println("part 2:", maximise(mirrors))
 
 }
