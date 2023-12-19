@@ -51,7 +51,7 @@ func parse(file string) (WorkflowMap, []Part, error) {
 	return workflows, parts, nil
 }
 
-func apply(rule string, part Part) string {
+func (part Part)apply(rule string) string {
 	tokens := strings.Split(rule, ":")
 	if len(tokens) == 1 {
 		return tokens[0]
@@ -72,7 +72,7 @@ func apply(rule string, part Part) string {
 	return result
 }
 
-func duplicate(state State) State {
+func (state State)copy() State {
 	dup := State{make(Part, 4), make(Part, 4), state.workflow}
 	for k, v := range state.min {
 		dup.min[k] = v
@@ -84,9 +84,9 @@ func duplicate(state State) State {
 	return dup
 }
 
-func applyState(rule string, state State) (State, State) {
-	passed := duplicate(state)
-	accepted := duplicate(state)
+func (state State)apply(rule string) (State, State) {
+	passed := state.copy()
+	accepted := state.copy()
 
 	tokens := strings.Split(rule, ":")
 	if len(tokens) == 1 {
@@ -117,7 +117,7 @@ func applyState(rule string, state State) (State, State) {
 	return passed, accepted
 }
 
-func score(state State) int {
+func (state State)combinations() int {
 	product := 1
 	for k := range state.max {
 		product *= state.max[k] - state.min[k] + 1
@@ -140,10 +140,10 @@ func combinations(workflows WorkflowMap, mn int, mx int) int {
 		state = queue[0]
 		queue = queue[1:]
 		for _, rule := range workflows[state.workflow] {
-			state, next = applyState(rule, state)
+			state, next = state.apply(rule)
 			switch next.workflow {
 			case "A":
-				combinations += score(next)
+				combinations += next.combinations()
 			case "R":
 			default:
 				queue = append(queue, next)
@@ -162,7 +162,7 @@ func accepted(workflows WorkflowMap, parts []Part) int {
 		workflow := "in"
 		for workflow != "A" && workflow != "R" {
 			for _, rule := range workflows[workflow] {
-				result := apply(rule, part)
+				result := part.apply(rule)
 				if result != "" {
 					workflow = result
 					break
