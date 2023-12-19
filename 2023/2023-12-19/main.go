@@ -51,7 +51,7 @@ func parse(file string) (WorkflowMap, []Part, error) {
 	return workflows, parts, nil
 }
 
-func (part Part)apply(rule string) string {
+func (part Part) apply(rule string) string {
 	tokens := strings.Split(rule, ":")
 	if len(tokens) == 1 {
 		return tokens[0]
@@ -72,7 +72,7 @@ func (part Part)apply(rule string) string {
 	return result
 }
 
-func (state State)copy() State {
+func (state State) copy() State {
 	dup := State{make(Part, 4), make(Part, 4), state.workflow}
 	for k, v := range state.min {
 		dup.min[k] = v
@@ -84,7 +84,7 @@ func (state State)copy() State {
 	return dup
 }
 
-func (state State)apply(rule string) (State, State) {
+func (state State) apply(rule string) (State, State) {
 	passed := state.copy()
 	accepted := state.copy()
 
@@ -117,7 +117,15 @@ func (state State)apply(rule string) (State, State) {
 	return passed, accepted
 }
 
-func (state State)combinations() int {
+func (part Part) score() int {
+	score := 0
+	for _, val := range part {
+		score += val
+	}
+	return score
+}
+
+func (state State) combinations() int {
 	product := 1
 	for k := range state.max {
 		product *= state.max[k] - state.min[k] + 1
@@ -170,9 +178,7 @@ func accepted(workflows WorkflowMap, parts []Part) int {
 			}
 		}
 		if workflow == "A" {
-			for _, val := range part {
-				accepted += val
-			}
+			accepted += part.score()
 		}
 	}
 	return accepted
