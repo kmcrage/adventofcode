@@ -165,14 +165,10 @@ func minPresses(nodes NodeMap, target string) int {
 	fmt.Println("conjunction:", string(nodes[target].kind), target)
 
 	periods := minPressesTrue(nodes.copy(), nodes[target].input)
-	period := 0
+	period := 1
 	for n, p := range periods {
 		fmt.Println("node:", n, "period:", p)
-		if period == 0 {
-			period = p
-		} else {
-			period = LCM(period, p)
-		}
+		period = LCM(period, p)
 	}
 	return period
 }
