@@ -1,0 +1,61 @@
+digraph G {
+
+rp -> gq, sd
+kh -> cs
+jz -> pl, jb
+dx -> tx
+dh -> bm, sd
+zv -> s, dx, hl, h, fm
+xb -> ds, sk
+hv -> sk, kr
+db -> zv, zz
+sk -> rg, hh, hv, kr, kh, zl, z
+tc -> jz
+dj -> ts, pl
+jk -> sd, vh
+fm -> dx, zv
+dp -> sd, cc
+vh -> sd
+lz -> cs
+kr -> rg
+jb -> bf, pl
+kz -> sk
+ts -> pl, bs
+gr -> s, zv
+kc -> sd, kf
+jd -> zv
+bs -> vg
+zk -> rp
+vf -> zk
+mm -> ms, sk
+qc -> pl, dj
+fk -> qc
+bm -> vf, sd
+ds -> kz, sk
+s -> zv, jd
+z -> mm
+ct -> fk
+p -> sk, xb
+tg -> cs
+tx -> cm, zv
+zl -> hh
+zz -> px, zv
+ms -> zl, sk
+s -> db
+px -> zv, s
+broadcaster -> fm, hv, kc, bv
+h -> cs
+hh -> p
+kf -> dh
+vg -> pl, tc
+bv -> ct, pl
+pl -> bv, fk, ct, bs, tg, tc
+cm -> zv, hl
+cc -> sd, jk
+bf -> pl
+hl -> gr
+cs -> rx
+gq -> dp
+rg -> z
+sd -> zk, kf, gq, lz, kc, vf
+}

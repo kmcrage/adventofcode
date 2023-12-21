@@ -164,21 +164,21 @@ func minPresses(nodes NodeMap, target string) int {
 	}
 	fmt.Println("conjunction:", string(nodes[target].kind), target)
 
+	periods := minPressesTrue(nodes.copy(), nodes[target].input)
 	period := 0
-	for tgt := range nodes[target].input {
-		ns := nodes.copy()
-		p := minPressesTrue(ns, tgt)
+	for n, p := range periods {
+		fmt.Println("node:", n, "period:", p)
 		if period == 0 {
 			period = p
 		} else {
 			period = LCM(period, p)
 		}
-		fmt.Println("input:", tgt, "period:", p)
 	}
 	return period
 }
 
-func minPressesTrue(nodes NodeMap, target string) int {
+func minPressesTrue(nodes NodeMap, targets map[string]bool) map[string]int {
+	counts := make(map[string]int, len(targets))
 	presses := 0
 	for {
 		presses++
@@ -187,13 +187,15 @@ func minPressesTrue(nodes NodeMap, target string) int {
 
 		for len(queue) > 0 {
 			msg := queue[0]
-			if msg.dst == target && !msg.state {
-				return presses
+			_, ok := targets[msg.dst]
+			if ok && !msg.state && counts[msg.dst] == 0 {
+				counts[msg.dst] = presses
+				if len(counts) == len(targets) {
+					return counts
+				}
 			}
-			// fmt.Println(msg.src, "-", msg.state, "->", msg.dst)
 			queue = append(queue[1:], activate(nodes, msg)...)
 		}
-		//fmt.Println()
 	}
 }
 
