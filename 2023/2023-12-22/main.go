@@ -79,7 +79,7 @@ func drop(bricks BrickList) Wall {
 			support := heights[[2]int{x, y}]
 			h = max(h, support.height)
 		}
-		
+
 		support := heights[[2]int{x, y}]
 		support.height = h + 1 + max(brick.start[2], brick.end[2]) - min(brick.start[2], brick.end[2])
 		support.brick = brick.name
@@ -140,6 +140,10 @@ func (start Brick) disintegrated(dependencies RelationMap, dependents RelationMa
 		next := make(BrickSet)
 		for brick := range unsupported {
 			for supported := range dependents[brick] {
+				if disintegrated[supported] {
+					continue
+				}
+
 				fallen := true
 				for supporter := range dependencies[supported] {
 					if _, ok := disintegrated[supporter]; !ok {
@@ -147,6 +151,7 @@ func (start Brick) disintegrated(dependencies RelationMap, dependents RelationMa
 						break
 					}
 				}
+				
 				if fallen {
 					next[supported] = true
 					disintegrated[supported] = true
