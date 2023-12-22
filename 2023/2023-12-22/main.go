@@ -9,18 +9,21 @@ import (
 	"strconv"
 	"strings"
 )
-type RelationMap map[rune]map[rune]bool
-type Wall map[[3]int]rune
-
-type Support struct {
-	brick  rune
-	height int
-}
 
 type Brick struct {
 	start [3]int
 	end   [3]int
 	name  rune
+}
+type BrickList []Brick
+type BrickSet map[rune]bool
+
+type RelationMap map[rune]BrickSet
+type Wall map[[3]int]rune
+
+type Support struct {
+	brick  rune
+	height int
 }
 
 func position(s string) [3]int {
@@ -31,7 +34,7 @@ func position(s string) [3]int {
 	return r
 }
 
-func parse(file string) ([]Brick, error) {
+func parse(file string) (BrickList, error) {
 	f, err := os.Open(file)
 	if err != nil {
 		return nil, err
@@ -39,7 +42,7 @@ func parse(file string) ([]Brick, error) {
 	defer f.Close()
 
 	scanner := bufio.NewScanner(f)
-	var bricks []Brick
+	var bricks BrickList
 	name := 'A'
 	for scanner.Scan() {
 		tokens := strings.Split(scanner.Text(), "~")
@@ -59,7 +62,7 @@ func parse(file string) ([]Brick, error) {
 	return bricks, nil
 }
 
-func drop(bricks []Brick) Wall {
+func drop(bricks BrickList) Wall {
 	heights := make(map[[2]int]Support)
 	wall := make(Wall, 0)
 	for _, brick := range bricks {
@@ -96,11 +99,11 @@ func relations(bricks []Brick, wall Wall) (RelationMap, RelationMap) {
 		brick := wall[[3]int{pos[0], pos[1], pos[2] - 1}]
 		if supported != brick && brick != 0 {
 			if dependencies[supported] == nil {
-				dependencies[supported] = make(map[rune]bool)
+				dependencies[supported] = make(BrickSet)
 			}
 			dependencies[supported][brick] = true
 			if dependents[brick] == nil {
-				dependents[brick] = make(map[rune]bool)
+				dependents[brick] = make(BrickSet)
 			}
 			dependents[brick][supported] = true
 		}
@@ -108,46 +111,52 @@ func relations(bricks []Brick, wall Wall) (RelationMap, RelationMap) {
 	return dependencies, dependents
 }
 
-func disintegratable(bricks []Brick, dependencies RelationMap, dependents RelationMap) int {
+func disintegratable(bricks BrickList, dependencies RelationMap, dependents RelationMap) int {
 	cnt := 0
 	for _, b := range bricks {
-		c := true
+		unsupported := true
 		for k := range dependents[b.name] {
 			if len(dependencies[k]) == 1 {
-				c = false
+				unsupported = false
 				break
 			}
 		}
-		if c {
+		if unsupported {
 			cnt++
 		}
 	}
 	return cnt
 }
 
-func disintegrated(bricks []Brick, dependencies RelationMap, dependents RelationMap) int {
-	cnt := 0
-	for _, start := range bricks {
-		disintegrated := map[rune]bool{start.name:true}
-		last := -1
-		for last != len(disintegrated) {
-			last = len(disintegrated)
-			for _, brick := range bricks {
-				for supported := range dependents[brick.name] {
-					fallen := true
-					for supporter := range dependencies[supported] {
-						if _,ok := disintegrated[supporter]; !ok {
-							fallen = false
-							break
-						}
+func (start Brick) disintegrated(dependencies RelationMap, dependents RelationMap) int {
+	disintegrated := BrickSet{start.name: true}
+	unsupported := disintegrated
+	for len(unsupported) != 0 {
+		next := make(BrickSet)
+		for brick := range unsupported {
+			for supported := range dependents[brick] {
+				fallen := true
+				for supporter := range dependencies[supported] {
+					if _, ok := disintegrated[supporter]; !ok {
+						fallen = false
+						break
 					}
-					if fallen {
-						disintegrated[supported] = true
-					}
+				}
+				if fallen {
+					next[supported] = true
+					disintegrated[supported] = true
 				}
 			}
 		}
-		cnt += len(disintegrated) -1
+		unsupported = next
+	}
+	return len(disintegrated) - 1
+}
+
+func (bricks BrickList) disintegrated(dependencies RelationMap, dependents RelationMap) int {
+	cnt := 0
+	for _, brick := range bricks {
+		cnt += brick.disintegrated(dependencies, dependents)
 	}
 	return cnt
 }
@@ -163,5 +172,5 @@ func main() {
 	wall := drop(bricks)
 	dependencies, dependents := relations(bricks, wall)
 	fmt.Println("part 1:", disintegratable(bricks, dependencies, dependents))
-	fmt.Println("part 2:", disintegrated(bricks, dependencies, dependents))
+	fmt.Println("part 2:", bricks.disintegrated(dependencies, dependents))
 }
