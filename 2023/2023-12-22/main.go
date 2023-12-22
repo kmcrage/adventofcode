@@ -67,16 +67,19 @@ func drop(bricks BrickList) Wall {
 	wall := make(Wall, 0)
 	for _, brick := range bricks {
 		h := 0
+
 		y := brick.start[1]
 		for x := min(brick.start[0], brick.end[0]); x <= max(brick.start[0], brick.end[0]); x++ {
 			support := heights[[2]int{x, y}]
 			h = max(h, support.height)
 		}
+
 		x := brick.start[0]
 		for y := min(brick.start[1], brick.end[1]); y <= max(brick.start[1], brick.end[1]); y++ {
 			support := heights[[2]int{x, y}]
 			h = max(h, support.height)
 		}
+		
 		support := heights[[2]int{x, y}]
 		support.height = h + 1 + max(brick.start[2], brick.end[2]) - min(brick.start[2], brick.end[2])
 		support.brick = brick.name
@@ -92,7 +95,7 @@ func drop(bricks BrickList) Wall {
 	return wall
 }
 
-func relations(bricks []Brick, wall Wall) (RelationMap, RelationMap) {
+func relations(bricks BrickList, wall Wall) (RelationMap, RelationMap) {
 	dependencies := make(RelationMap, len(bricks))
 	dependents := make(RelationMap, len(bricks))
 	for pos, supported := range wall {
@@ -111,21 +114,23 @@ func relations(bricks []Brick, wall Wall) (RelationMap, RelationMap) {
 	return dependencies, dependents
 }
 
-func disintegratable(bricks BrickList, dependencies RelationMap, dependents RelationMap) int {
+func (bricks BrickList) disintegratable(dependencies RelationMap, dependents RelationMap) int {
 	cnt := 0
-	for _, b := range bricks {
-		unsupported := true
-		for k := range dependents[b.name] {
-			if len(dependencies[k]) == 1 {
-				unsupported = false
-				break
-			}
-		}
-		if unsupported {
+	for _, brick := range bricks {
+		if brick.disintegratable(dependencies, dependents) {
 			cnt++
 		}
 	}
 	return cnt
+}
+
+func (brick Brick) disintegratable(dependencies RelationMap, dependents RelationMap) bool {
+	for dep := range dependents[brick.name] {
+		if len(dependencies[dep]) == 1 {
+			return false
+		}
+	}
+	return true
 }
 
 func (start Brick) disintegrated(dependencies RelationMap, dependents RelationMap) int {
@@ -171,6 +176,6 @@ func main() {
 	}
 	wall := drop(bricks)
 	dependencies, dependents := relations(bricks, wall)
-	fmt.Println("part 1:", disintegratable(bricks, dependencies, dependents))
+	fmt.Println("part 1:", bricks.disintegratable(dependencies, dependents))
 	fmt.Println("part 2:", bricks.disintegrated(dependencies, dependents))
 }
