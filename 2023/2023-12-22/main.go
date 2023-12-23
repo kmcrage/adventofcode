@@ -154,14 +154,14 @@ func (start Brick) disintegrated() int {
 				continue
 			}
 
-			supported := true
+			unsupported := true
 			for supporter := range above.below {
 				if !disintegrated[supporter.name] {
-					supported = false
+					unsupported = false
 					break
 				}
 			}
-			if supported {
+			if unsupported {
 				disintegrated[above.name] = true
 				queue = append(queue, above)
 			}
