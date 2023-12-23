@@ -14,11 +14,12 @@ type Brick struct {
 	start [3]int
 	end   [3]int
 	name  rune
+	above map[*Brick]bool
+	below map[*Brick]bool
 }
-type BrickList []Brick
-type BrickSet map[rune]bool
 
-type RelationMap map[rune]BrickSet
+type BrickMap map[rune]*Brick
+
 type Wall map[[3]int]rune
 
 type Support struct {
@@ -34,7 +35,7 @@ func position(s string) [3]int {
 	return r
 }
 
-func parse(file string) (BrickList, error) {
+func parse(file string) (BrickMap, error) {
 	f, err := os.Open(file)
 	if err != nil {
 		return nil, err
@@ -42,15 +43,25 @@ func parse(file string) (BrickList, error) {
 	defer f.Close()
 
 	scanner := bufio.NewScanner(f)
-	var bricks BrickList
+	bricks := make(BrickMap, 0)
 	name := 'A'
 	for scanner.Scan() {
 		tokens := strings.Split(scanner.Text(), "~")
-		brick := Brick{position(tokens[0]), position(tokens[1]), name}
-		bricks = append(bricks, brick)
+		bricks[name] = &Brick{start: position(tokens[0]), end: position(tokens[1]), name: name}
 		name++
 	}
-	slices.SortFunc(bricks, func(a, b Brick) int {
+	return bricks, nil
+}
+
+func (brickmap BrickMap) sorted() []*Brick {
+	bricks := make([]*Brick, len(brickmap))
+	b := 0
+	for _, brick := range brickmap {
+		bricks[b] = brick
+		b++
+	}
+
+	slices.SortFunc(bricks, func(a, b *Brick) int {
 		if min(a.start[2], a.end[2]) < min(b.start[2], b.end[2]) {
 			return -1
 		}
@@ -59,34 +70,35 @@ func parse(file string) (BrickList, error) {
 		}
 		return 1
 	})
-	return bricks, nil
+	return bricks
 }
 
-func drop(bricks BrickList) Wall {
+func drop(bricks BrickMap) Wall {
 	heights := make(map[[2]int]Support)
 	wall := make(Wall, 0)
-	for _, brick := range bricks {
+	for _, brick := range bricks.sorted() {
 		h := 0
+		xMin := min(brick.start[0], brick.end[0])
+		xMax := max(brick.start[0], brick.end[0])
+		yMin := min(brick.start[1], brick.end[1])
+		yMax := max(brick.start[1], brick.end[1])
+		zMin := min(brick.start[2], brick.end[2])
+		zMax := max(brick.start[2], brick.end[2])
 
-		y := brick.start[1]
-		for x := min(brick.start[0], brick.end[0]); x <= max(brick.start[0], brick.end[0]); x++ {
-			support := heights[[2]int{x, y}]
-			h = max(h, support.height)
+		for x := xMin; x <= xMax; x++ {
+			for y := yMin; y <= yMax; y++ {
+				support := heights[[2]int{x, y}]
+				h = max(h, support.height)
+			}
 		}
 
-		x := brick.start[0]
-		for y := min(brick.start[1], brick.end[1]); y <= max(brick.start[1], brick.end[1]); y++ {
-			support := heights[[2]int{x, y}]
-			h = max(h, support.height)
-		}
-
-		support := heights[[2]int{x, y}]
-		support.height = h + 1 + max(brick.start[2], brick.end[2]) - min(brick.start[2], brick.end[2])
+		support := heights[[2]int{xMin, yMin}]
+		support.height = h + 1 + zMax - zMin
 		support.brick = brick.name
-		for x = min(brick.start[0], brick.end[0]); x <= max(brick.start[0], brick.end[0]); x++ {
-			for y = min(brick.start[1], brick.end[1]); y <= max(brick.start[1], brick.end[1]); y++ {
+		for x := xMin; x <= xMax; x++ {
+			for y := yMin; y <= yMax; y++ {
 				heights[[2]int{x, y}] = support
-				for z := 0; z <= max(brick.start[2], brick.end[2])-min(brick.start[2], brick.end[2]); z++ {
+				for z := 0; z <= zMax -zMin; z++ {
 					wall[[3]int{x, y, h + 1 + z}] = support.brick
 				}
 			}
@@ -95,78 +107,73 @@ func drop(bricks BrickList) Wall {
 	return wall
 }
 
-func relations(bricks BrickList, wall Wall) (RelationMap, RelationMap) {
-	dependencies := make(RelationMap, len(bricks))
-	dependents := make(RelationMap, len(bricks))
-	for pos, supported := range wall {
-		brick := wall[[3]int{pos[0], pos[1], pos[2] - 1}]
-		if supported != brick && brick != 0 {
-			if dependencies[supported] == nil {
-				dependencies[supported] = make(BrickSet)
+func relations(bricks BrickMap, wall Wall) {
+	for pos, above := range wall {
+		below := wall[[3]int{pos[0], pos[1], pos[2] - 1}]
+		if below != 0 && above != below {
+			if bricks[above].below == nil {
+				bricks[above].below = make(map[*Brick]bool, 0)
 			}
-			dependencies[supported][brick] = true
-			if dependents[brick] == nil {
-				dependents[brick] = make(BrickSet)
+			bricks[above].below[bricks[below]] = true
+			if bricks[below].above == nil {
+				bricks[below].above = make(map[*Brick]bool, 0)
 			}
-			dependents[brick][supported] = true
+			bricks[below].above[bricks[above]] = true
 		}
 	}
-	return dependencies, dependents
 }
 
-func (bricks BrickList) disintegratable(dependencies RelationMap, dependents RelationMap) int {
+func (bricks BrickMap) disintegratable() int {
 	cnt := 0
 	for _, brick := range bricks {
-		if brick.disintegratable(dependencies, dependents) {
+		if brick.disintegratable() {
 			cnt++
 		}
 	}
 	return cnt
 }
 
-func (brick Brick) disintegratable(dependencies RelationMap, dependents RelationMap) bool {
-	for dep := range dependents[brick.name] {
-		if len(dependencies[dep]) == 1 {
+func (brick Brick) disintegratable() bool {
+	for above := range brick.above {
+		if len(above.below) == 1 {
 			return false
 		}
 	}
 	return true
 }
 
-func (start Brick) disintegrated(dependencies RelationMap, dependents RelationMap) int {
-	disintegrated := BrickSet{start.name: true}
-	unsupported := disintegrated
-	for len(unsupported) != 0 {
-		next := make(BrickSet)
-		for brick := range unsupported {
-			for supported := range dependents[brick] {
-				if disintegrated[supported] {
-					continue
-				}
+func (start Brick) disintegrated() int {
+	queue := []*Brick{&start}
+	disintegrated := make(map[rune]bool, 0)
+	for len(queue) > 0 {
+		brick := queue[0]
+		queue = queue[1:]
+		disintegrated[brick.name] = true
+		for above := range brick.above {
+			if disintegrated[above.name] {
+				continue
+			}
 
-				fallen := true
-				for supporter := range dependencies[supported] {
-					if _, ok := disintegrated[supporter]; !ok {
-						fallen = false
-						break
-					}
-				}
-				
-				if fallen {
-					next[supported] = true
-					disintegrated[supported] = true
+			supported := true
+			for supporter := range above.below {
+				if !disintegrated[supporter.name] {
+					supported = false
+					break
 				}
 			}
+			if supported {
+				disintegrated[above.name] = true
+				queue = append(queue, above)
+			}
 		}
-		unsupported = next
 	}
 	return len(disintegrated) - 1
 }
 
-func (bricks BrickList) disintegrated(dependencies RelationMap, dependents RelationMap) int {
+func (bricks BrickMap) disintegrated() int {
 	cnt := 0
 	for _, brick := range bricks {
-		cnt += brick.disintegrated(dependencies, dependents)
+		cnt += brick.disintegrated()
 	}
 	return cnt
 }
@@ -180,7 +187,7 @@ func main() {
 		log.Fatal(err)
 	}
 	wall := drop(bricks)
-	dependencies, dependents := relations(bricks, wall)
-	fmt.Println("part 1:", bricks.disintegratable(dependencies, dependents))
-	fmt.Println("part 2:", bricks.disintegrated(dependencies, dependents))
+	relations(bricks, wall)
+	fmt.Println("part 1:", bricks.disintegratable())
+	fmt.Println("part 2:", bricks.disintegrated())
 }
