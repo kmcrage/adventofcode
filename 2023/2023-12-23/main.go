@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"github.com/edwingeng/deque/v2"
 )
 
 type Position struct {
@@ -26,12 +27,14 @@ type Node struct {
 
 type NodeMap map[Position]*Node
 
-func (st State) copy() State {
-	copy := State{st.pos, make(map[Position]bool), st.dist}
+var Cardinals = []Position{{-1, 0}, {0, -1}, {1, 0}, {0, 1}}
+
+func (st *State) copy() *State {
+	copy := State{st.pos, make(map[Position]bool, len(st.path)), st.dist}
 	for p, b := range st.path {
 		copy.path[p] = b
 	}
-	return copy
+	return &copy
 }
 
 func parse(file string) ([][]rune, error) {
@@ -44,12 +47,7 @@ func parse(file string) ([][]rune, error) {
 	scanner := bufio.NewScanner(f)
 	route := make([][]rune, 0)
 	for scanner.Scan() {
-		line := scanner.Text()
-		row := make([]rune, len(line))
-		for j, r := range line {
-			row[j] = r
-		}
-		route = append(route, row)
+		route = append(route, []rune(scanner.Text()))
 	}
 	return route, nil
 }
@@ -75,7 +73,8 @@ func (nodes NodeMap) dfs(start, end Position, visited int64) int {
 	if start == end {
 		return 0
 	}
-	if result, ok := dfscache[[2]int64{nodes[start].mask, visited}]; ok {
+	key := [2]int64{nodes[start].mask, visited}
+	if result, ok := dfscache[key]; ok {
 		return result
 	}
 
@@ -87,7 +86,7 @@ func (nodes NodeMap) dfs(start, end Position, visited int64) int {
 		longest = max(longest, dist+nodes.dfs(nghbr, end, visited|nodes[nghbr].mask))
 	}
 
-	dfscache[[2]int64{nodes[start].mask, visited}] = longest
+	dfscache[key] = longest
 	return longest
 }
 
@@ -100,15 +99,8 @@ func nodemap(route [][]rune, slides bool) NodeMap {
 				jnctn = 4
 			} else if r == '.' {
 				jnctn = 0
-				for dir := 0; dir < 4; dir++ {
-					x := i
-					y := j
-					if dir%2 == 0 {
-						x += 1 - dir
-					} else {
-						y += 2 - dir
-					}
-					if route[x][y] != '#' {
+				for _, dir := range Cardinals {
+					if route[i+dir.x][j+dir.y] != '#' {
 						jnctn++
 					}
 				}
@@ -136,60 +128,57 @@ func analyse(route [][]rune, nodes map[Position]*Node, slides bool) {
 }
 
 func routes(start Position, route [][]rune, nodes map[Position]*Node, slides bool) {
-	queue := make([]*State, 1, len(route))
-	queue[0] = &State{start, make(map[Position]bool), 0}
-	queue[0].path[start] = true
-
-	for len(queue) > 0 {
-		state := *queue[0]
-		queue = queue[1:]
+	queue := deque.NewDeque[*State]()
+	path := map[Position]bool{start: true}
+	queue.PushBack(&State{start, path, 0})
+	
+	for queue.Len() > 0 {
+		state := queue.PopFront()
 
 		if _, ok := nodes[state.pos]; ok && start != state.pos {
-			dist, ok := nodes[start].nghbrs[state.pos]
-			if ok {
-				nodes[start].nghbrs[state.pos] = max(dist, len(state.path)-1)
-			} else {
-				nodes[start].nghbrs[state.pos] = len(state.path) - 1
-			}
+			dist := max(nodes[start].nghbrs[state.pos], len(state.path)-1)
+			nodes[start].nghbrs[state.pos] = dist
 			continue
 		}
 
-		for dir := 0; dir < 4; dir++ {
-			if slides {
-				if (route[state.pos.x][state.pos.y] == '>' && dir != 1) ||
-					(route[state.pos.x][state.pos.y] == '<' && dir != 3) ||
-					(route[state.pos.x][state.pos.y] == 'v' && dir != 0) ||
-					(route[state.pos.x][state.pos.y] == '^' && dir != 2) {
-					continue
-				}
+		dirs := Cardinals
+		if slides {
+			switch route[state.pos.x][state.pos.y] {
+			case '>':
+				dirs = []Position{{0, 1}}
+			case '<':
+				dirs = []Position{{0, -1}}
+			case 'v':
+				dirs = []Position{{1, 0}}
+			case '^':
+				dirs = []Position{{-1, 0}}
 			}
+		}
+
+		for _, dir := range dirs {
 			nghbr := state.copy()
-			if dir%2 == 0 {
-				nghbr.pos.x += 1 - dir
-			} else {
-				nghbr.pos.y += 2 - dir
-			}
+			nghbr.pos.x += dir.x
+			nghbr.pos.y += dir.y
+
 			if nghbr.pos.x < 0 {
 				continue //only posible at start
 			}
+
+			r:= route[nghbr.pos.x][nghbr.pos.y]
 			if slides {
-				if (route[nghbr.pos.x][nghbr.pos.y] == '#') ||
-					(route[nghbr.pos.x][nghbr.pos.y] == '>' && dir == 3) ||
-					(route[nghbr.pos.x][nghbr.pos.y] == '<' && dir == 1) ||
-					(route[nghbr.pos.x][nghbr.pos.y] == '^' && dir == 0) ||
-					(route[nghbr.pos.x][nghbr.pos.y] == 'v' && dir == 2) {
-					continue
-				}
-			}else {
-				if route[nghbr.pos.x][nghbr.pos.y] == '#' {
+				if (r == '>' && dir.y == -1) ||
+					(r == '<' && dir.y == 1) ||
+					(r == '^' && dir.x == 1) ||
+					(r == 'v' && dir.x == -1) {
 					continue
 				}
 			}
-			if nghbr.path[nghbr.pos] {
+
+			if r == '#' || nghbr.path[nghbr.pos] {
 				continue
 			}
 			nghbr.path[nghbr.pos] = true
-			queue = append(queue, &nghbr)
+			queue.PushBack(nghbr)
 		}
 	}
 }
