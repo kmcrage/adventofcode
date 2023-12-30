@@ -181,8 +181,11 @@ func main() {
 	}
 	fmt.Println("parsed...")
 	nodemap := nodemap(route)
-	fmt.Println("found nodes...", len(nodemap))
+	fmt.Println("found nodes... ", len(nodemap))
 	analyse(route, nodemap)
+	for p,n := range nodemap {
+		fmt.Println(p, *n)
+	}
 	fmt.Println("found edge lengths...")
 	fmt.Println("part 2:", dfs(route,nodemap))
 }
