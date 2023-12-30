@@ -82,7 +82,7 @@ func possibleVel(diffPosF, velF float64, maybe map[int]bool) map[int]bool {
 	vel := int(velF)
 	match := make(map[int]bool, len(maybe))
 	for v := range maybe {
-		if vel != v && abs(diffPos)% abs(vel-v) == 0 {
+		if vel != v && abs(diffPos)%abs(vel-v) == 0 {
 			match[v] = true
 		} else if vel == v && diffPos == 0 {
 			match[v] = true
@@ -147,8 +147,6 @@ func collisions(hails []Hail) int {
 	}
 	return 0
 }
-
-
 
 func main() {
 	// file := "test.dat"

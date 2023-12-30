@@ -142,9 +142,9 @@ func main() {
 	// neato 2023-12-25.dot -O -Tjpg
 	// these wires found by obesrvation
 	snips := []Wire{
-		Wire{"xft", "pzv"},
-		Wire{"dqf", "cbx"},
-		Wire{"sds", "hbr"},
+		{"xft", "pzv"},
+		{"dqf", "cbx"},
+		{"sds", "hbr"},
 	}
 	fmt.Println("Part1:", part1(wires, snips))
 
