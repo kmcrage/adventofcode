@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"runtime/pprof"
+
 	"github.com/edwingeng/deque/v2"
 )
 
@@ -73,17 +75,19 @@ func (nodes NodeMap) dfs(start, end Position, visited int64) int {
 	if start == end {
 		return 0
 	}
-	key := [2]int64{nodes[start].mask, visited}
+	startNode := nodes[start]
+	key := [2]int64{startNode.mask, visited}
 	if result, ok := dfscache[key]; ok {
 		return result
 	}
 
 	longest := -1 << 63 // the end point might not be the end node
-	for nghbr, dist := range nodes[start].nghbrs {
-		if nodes[nghbr].mask&visited != 0 {
+	for nghbr, dist := range startNode.nghbrs {
+		nghbrNode := nodes[nghbr]
+		if nghbrNode.mask&visited != 0 {
 			continue
 		}
-		longest = max(longest, dist+nodes.dfs(nghbr, end, visited|nodes[nghbr].mask))
+		longest = max(longest, dist+nodes.dfs(nghbr, end, visited|nghbrNode.mask))
 	}
 
 	dfscache[key] = longest
@@ -107,7 +111,7 @@ func nodemap(route [][]rune, slides bool) NodeMap {
 			}
 			if jnctn > 2 {
 				pos := Position{i, j}
-				nodes[pos] = &Node{pos, make(map[Position]int), 1 << len(nodes)}
+				nodes[pos] = &Node{pos, make(map[Position]int, 4), 1 << len(nodes)}
 			}
 		}
 	}
@@ -131,7 +135,7 @@ func routes(start Position, route [][]rune, nodes map[Position]*Node, slides boo
 	queue := deque.NewDeque[*State]()
 	path := map[Position]bool{start: true}
 	queue.PushBack(&State{start, path, 0})
-	
+
 	for queue.Len() > 0 {
 		state := queue.PopFront()
 
@@ -164,7 +168,7 @@ func routes(start Position, route [][]rune, nodes map[Position]*Node, slides boo
 				continue //only posible at start
 			}
 
-			r:= route[nghbr.pos.x][nghbr.pos.y]
+			r := route[nghbr.pos.x][nghbr.pos.y]
 			if slides {
 				if (r == '>' && dir.y == -1) ||
 					(r == '<' && dir.y == 1) ||
@@ -184,6 +188,11 @@ func routes(start Position, route [][]rune, nodes map[Position]*Node, slides boo
 }
 
 func main() {
+	f, _ := os.Create("day23.prof")
+	pprof.StartCPUProfile(f)
+	defer pprof.StopCPUProfile()
+	// go tool pprof -http=:8080 day23.prof
+
 	// file := "test.dat"
 	file := "2023-12-23.dat"
 
