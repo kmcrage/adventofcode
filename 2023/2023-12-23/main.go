@@ -145,21 +145,7 @@ func routes(start Position, route [][]rune, nodes map[Position]*Node, slides boo
 			continue
 		}
 
-		dirs := Cardinals
-		if slides {
-			switch route[state.pos.x][state.pos.y] {
-			case '>':
-				dirs = []Position{{0, 1}}
-			case '<':
-				dirs = []Position{{0, -1}}
-			case 'v':
-				dirs = []Position{{1, 0}}
-			case '^':
-				dirs = []Position{{-1, 0}}
-			}
-		}
-
-		for _, dir := range dirs {
+		for _, dir := range Cardinals {
 			nghbr := state.copy()
 			nghbr.pos.x += dir.x
 			nghbr.pos.y += dir.y
@@ -170,11 +156,19 @@ func routes(start Position, route [][]rune, nodes map[Position]*Node, slides boo
 
 			r := route[nghbr.pos.x][nghbr.pos.y]
 			if slides {
-				if (r == '>' && dir.y == -1) ||
-					(r == '<' && dir.y == 1) ||
-					(r == '^' && dir.x == 1) ||
-					(r == 'v' && dir.x == -1) {
-					continue
+				switch r {
+				case '>':
+					nghbr.pos.y += 1
+					r = route[nghbr.pos.x][nghbr.pos.y]
+				case '<':
+					nghbr.pos.y -= 1
+					r = route[nghbr.pos.x][nghbr.pos.y]
+				case '^':
+					nghbr.pos.x -= 1
+					r = route[nghbr.pos.x][nghbr.pos.y]
+				case 'v':
+					nghbr.pos.x += 1
+					r = route[nghbr.pos.x][nghbr.pos.y]
 				}
 			}
 
