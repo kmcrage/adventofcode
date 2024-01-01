@@ -158,15 +158,19 @@ func routes(start Position, route [][]rune, nodes map[Position]*Node, slides boo
 			if slides {
 				switch r {
 				case '>':
+					nghbr.path[nghbr.pos] = true
 					nghbr.pos.y += 1
 					r = route[nghbr.pos.x][nghbr.pos.y]
 				case '<':
+					nghbr.path[nghbr.pos] = true
 					nghbr.pos.y -= 1
 					r = route[nghbr.pos.x][nghbr.pos.y]
 				case '^':
+					nghbr.path[nghbr.pos] = true
 					nghbr.pos.x -= 1
 					r = route[nghbr.pos.x][nghbr.pos.y]
 				case 'v':
+					nghbr.path[nghbr.pos] = true
 					nghbr.pos.x += 1
 					r = route[nghbr.pos.x][nghbr.pos.y]
 				}
