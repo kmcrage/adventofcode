@@ -35,12 +35,7 @@ func parse(file string) ([][]rune, error) {
 	scanner := bufio.NewScanner(f)
 	var mirrors [][]rune
 	for scanner.Scan() {
-		line := scanner.Text()
-		row := make([]rune, len(line))
-		for j, r := range line {
-			row[j] = r
-		}
-		mirrors = append(mirrors, row)
+		mirrors = append(mirrors, []rune(scanner.Text()))
 	}
 	return mirrors, nil
 }
@@ -54,12 +49,12 @@ func count(visited map[State]bool) int {
 	return len(tiles) - 1
 }
 
-func energised(mirrors [][]rune, start State) int {
+func energised(mirrors [][]rune, start *State) int {
 	visited := make(map[State]bool, len(mirrors)*len(mirrors[0]))
-	queue := make([]State, 0, 4*len(visited))
+	queue := make([]*State, 0, 4*len(visited))
 	queue = append(queue, start)
 	for len(queue) > 0 {
-		state := queue[0]
+		state := *queue[0]
 		queue = queue[1:]
 		for {
 			if visited[state] {
@@ -81,12 +76,12 @@ func energised(mirrors [][]rune, start State) int {
 			case '|':
 				if state.Direction%2 == 1{
 					state.Direction = North
-					queue = append(queue, State{state.X, state.Y, South})
+					queue = append(queue, &State{state.X, state.Y, South})
 				}
 			case '-':
 				if state.Direction%2 == 0{
 					state.Direction = East
-					queue = append(queue, State{state.X, state.Y, West})
+					queue = append(queue, &State{state.X, state.Y, West})
 				}
 			case '/':
 				if state.Direction%2 == 0{
@@ -106,7 +101,7 @@ func energised(mirrors [][]rune, start State) int {
 	return count(visited)
 }
 
-func worker(ch chan<- int, wg *sync.WaitGroup, mirrors [][]rune, state State) {
+func worker(ch chan<- int, wg *sync.WaitGroup, mirrors [][]rune, state *State) {
 	defer wg.Done()
 	ch <- energised(mirrors, state)
 }
@@ -116,13 +111,13 @@ func maximise(mirrors [][]rune) int {
 	ch := make(chan int, 2*len(mirrors)+2*len(mirrors[0])) // Creating an buffered channel
 	for i := range mirrors {
 		wg.Add(2)
-		go worker(ch, &wg, mirrors, State{i, -1, East})
-		go worker(ch, &wg, mirrors, State{i, len(mirrors[0]), West})
+		go worker(ch, &wg, mirrors, &State{i, -1, East})
+		go worker(ch, &wg, mirrors, &State{i, len(mirrors[0]), West})
 	}
 	for j := range mirrors[0] {
 		wg.Add(2)
-		go worker(ch, &wg, mirrors, State{-1, j, South})
-		go worker(ch, &wg, mirrors, State{len(mirrors), j, North})
+		go worker(ch, &wg, mirrors, &State{-1, j, South})
+		go worker(ch, &wg, mirrors, &State{len(mirrors), j, North})
 	}
 
 	go func() {
@@ -146,7 +141,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Println("part 1:", energised(mirrors, State{0, -1, East}))
+	fmt.Println("part 1:", energised(mirrors, &State{0, -1, East}))
 	fmt.Println("part 2:", maximise(mirrors))
 
 }
