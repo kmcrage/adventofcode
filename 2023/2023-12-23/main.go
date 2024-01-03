@@ -22,7 +22,7 @@ type State struct {
 
 type Node struct {
 	pos    Position
-	nghbrs map[Position]int
+	nghbrs map[*Node]int
 	mask   int64
 	level  int
 }
@@ -64,35 +64,33 @@ func (nodes NodeMap) longestpath() int {
 	}
 	dfscache = make(map[[2]int64]int)
 	fmt.Println("dfs...")
-	return nodes.dfs(start, end, nodes[start].mask, levels)
+	return nodes.dfs(nodes[start], nodes[end], nodes[start].mask, levels)
 }
 
 var dfscache map[[2]int64]int
 
-func (nodes NodeMap) dfs(start, end Position, visited int64, levels []int) int {
+func (nodes NodeMap) dfs(start, end *Node, visited int64, levels []int) int {
 	if start == end {
 		return 0
 	}
-	startNode := nodes[start]
-	key := [2]int64{startNode.mask, visited}
+	key := [2]int64{start.mask, visited}
 	if result, ok := dfscache[key]; ok {
 		return result
 	}
-	levels[startNode.level] -= 1
+	levels[start.level] -= 1
 
 	longest := -1 << 63 // the end point might not be the end node
-	for nghbr, dist := range startNode.nghbrs {
-		nghbrNode := nodes[nghbr]
-		if nghbrNode.mask&visited != 0 {
+	for nghbr, dist := range start.nghbrs {
+		if nghbr.mask&visited != 0 {
 			continue
 		}
 		// this is de-facto assuming the end node is furthest from the start
-		if levels[startNode.level] == 0 && nghbrNode.level > startNode.level {
+		if levels[start.level] == 0 && nghbr.level > start.level {
 			continue
 		}
 		nlevels := make([]int, len(levels))
 		copy(nlevels, levels)
-		longest = max(longest, dist+nodes.dfs(nghbr, end, visited|nghbrNode.mask, nlevels))
+		longest = max(longest, dist+nodes.dfs(nghbr, end, visited|nghbr.mask, nlevels))
 	}
 
 	dfscache[key] = longest
@@ -117,7 +115,7 @@ func nodemap(route [][]rune, slides bool) NodeMap {
 			if jnctn > 2 {
 				pos := Position{i, j}
 				nodes[pos] = &Node{pos: pos,
-					nghbrs: make(map[Position]int, 4),
+					nghbrs: make(map[*Node]int, 4),
 					mask:   1 << len(nodes)}
 			}
 		}
@@ -148,12 +146,11 @@ func (nodes NodeMap) levels(start, end Position) {
 		visited[node.pos] = true
 
 		for nghbr := range node.nghbrs {
-			nghbrNode := nodes[nghbr]
-			if _, ok := visited[nghbrNode.pos]; ok {
+			if _, ok := visited[nghbr.pos]; ok {
 				continue
 			}
-			nghbrNode.level = node.level + 1
-			queue = append(queue, nghbrNode)
+			nghbr.level = node.level + 1
+			queue = append(queue, nghbr)
 		}
 	}
 	endlevel := nodes[end].level
@@ -193,11 +190,12 @@ func routes(start Position, route [][]rune, nodes map[Position]*Node, slides boo
 
 	for len(queue) > 0 {
 		state := queue[0]
+		node := nodes[state.pos]
 		queue = queue[1:]
 
 		if _, ok := nodes[state.pos]; ok && start != state.pos {
-			dist := max(nodes[start].nghbrs[state.pos], len(state.path)-1)
-			nodes[start].nghbrs[state.pos] = dist
+			dist := max(nodes[start].nghbrs[node], len(state.path)-1)
+			nodes[start].nghbrs[node] = dist
 			continue
 		}
 
