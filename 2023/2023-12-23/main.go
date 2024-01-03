@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"log"
+	"maps"
 	"os"
 	"runtime/pprof"
 
@@ -32,11 +33,7 @@ type NodeMap map[Position]*Node
 var Cardinals = []Position{{-1, 0}, {0, -1}, {1, 0}, {0, 1}}
 
 func (st *State) copy() *State {
-	copy := State{st.pos, make(map[Position]bool, len(st.path)), st.dist}
-	for p, b := range st.path {
-		copy.path[p] = b
-	}
-	return &copy
+	return &State{st.pos, maps.Clone(st.path), st.dist}
 }
 
 func parse(file string) ([][]rune, error) {
