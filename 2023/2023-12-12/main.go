@@ -41,31 +41,33 @@ func solver(node Node, target []int) int {
 		return s
 	}
 
-	cache[node] = 0
+	result := 0
 	if node.Spring == "" {
 		if len(target) == 0 && node.HashCount == 0 {
-			cache[node] = 1
+			result = 1
 		}
-		return cache[node]
+		cache[node] = result
+		return result
 	}
 
 	switch node.Spring[0] {
 	case '.':
 		if node.HashCount == 0 {
-			cache[node] = solver(Node{node.Spring[1:], node.NumGroups, 0}, target)
+			result = solver(Node{node.Spring[1:], node.NumGroups, 0}, target)
 		} else if node.HashCount == target[0] {
-			cache[node] = solver(Node{node.Spring[1:], node.NumGroups + 1, 0}, target[1:])
+			result = solver(Node{node.Spring[1:], node.NumGroups + 1, 0}, target[1:])
 		}
 	case '#':
 		if len(target) > 0 && node.HashCount < target[0] {
-			cache[node] = solver(Node{node.Spring[1:], node.NumGroups, node.HashCount + 1}, target)
+			result = solver(Node{node.Spring[1:], node.NumGroups, node.HashCount + 1}, target)
 		}
 	case '?':
-		cache[node] = (solver(Node{"." + node.Spring[1:], node.NumGroups, node.HashCount}, target) +
+		result = (solver(Node{"." + node.Spring[1:], node.NumGroups, node.HashCount}, target) +
 			solver(Node{"#" + node.Spring[1:], node.NumGroups, node.HashCount}, target))
 
 	}
-	return cache[node]
+	cache[node] = result
+	return result
 }
 
 func process(file string, repeats []int) ([]int, error) {
