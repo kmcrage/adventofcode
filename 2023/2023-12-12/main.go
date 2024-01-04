@@ -7,6 +7,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"github.com/dolthub/swiss"
 )
 
 type Node struct {
@@ -28,16 +29,16 @@ func parseLine(line string, repeats int) (string, []int) {
 	return springs, targets
 }
 
-var cache map[Node]int
+var cache *swiss.Map[Node, int]
 
 func processLine(line string, repeats int) int {
 	start, target := parseLine(line, repeats)
-	cache = make(map[Node]int, 0)
+	cache = swiss.NewMap[Node, int](0)
 	return solver(Node{start + ".", 0, 0}, target)
 }
 
 func solver(node Node, target []int) int {
-	if s, ok := cache[node]; ok {
+	if s, ok := cache.Get(node); ok {
 		return s
 	}
 
@@ -46,7 +47,7 @@ func solver(node Node, target []int) int {
 		if len(target) == 0 && node.HashCount == 0 {
 			result = 1
 		}
-		cache[node] = result
+		cache.Put(node, result)
 		return result
 	}
 
@@ -66,7 +67,7 @@ func solver(node Node, target []int) int {
 			solver(Node{"#" + node.Spring[1:], node.NumGroups, node.HashCount}, target))
 
 	}
-	cache[node] = result
+	cache.Put(node, result)
 	return result
 }
 
