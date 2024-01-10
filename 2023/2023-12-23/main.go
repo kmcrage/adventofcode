@@ -97,8 +97,7 @@ func (nodes NodeMap) dfs(start, end *Node, visited int64, levels []int) int {
 	return longest
 }
 
-func nodemap(route [][]rune, slides bool) NodeMap {
-	nodes := make(map[Position]*Node, len(route))
+func (nodes NodeMap) junctions(route [][]rune, slides bool) {
 	for i := range route {
 		for j, r := range route[i] {
 			jnctn := 0
@@ -121,10 +120,16 @@ func nodemap(route [][]rune, slides bool) NodeMap {
 			}
 		}
 	}
+}
 
+func nodemap(route [][]rune, slides bool) NodeMap {
+	nodes := make(NodeMap, len(route))
+	nodes.junctions(route, slides)
 	fmt.Println("found", len(nodes), "nodes...")
 	fmt.Println("finding edge lengths...")
-	analyse(route, nodes, slides)
+	nodes.analyse(route, slides)
+	fmt.Println("finding levels...")
+	nodes.levels()
 	return nodes
 }
 
@@ -132,8 +137,13 @@ func nodemap(route [][]rune, slides bool) NodeMap {
 // If we've visited all the nodes in a level set, it forms
 // a boundary that we can't cross again, so we need to be on the
 // "end" side of that boundary
-func (nodes NodeMap) levels(end Position) {
-	fmt.Println("finding levels...")
+func (nodes NodeMap) levels() {
+	var end Position
+	for p := range nodes {
+		if p.x > end.x {
+			end = p
+		}
+	}
 	endNode := nodes[end]
 	queue := []*Node{endNode}
 	visited := make(map[Position]bool)
@@ -156,7 +166,7 @@ func (nodes NodeMap) levels(end Position) {
 	}
 }
 
-func analyse(route [][]rune, nodes NodeMap, slides bool) {
+func (nodes NodeMap) analyse(route [][]rune, slides bool) {
 	var end Position
 	for pos := range nodes {
 		if pos.x > end.x {
@@ -165,12 +175,11 @@ func analyse(route [][]rune, nodes NodeMap, slides bool) {
 		if pos.x == len(route)-1 {
 			continue
 		}
-		routes(pos, route, nodes, slides)
+		nodes.routes(pos, route, slides)
 	}
-	nodes.levels(end)
 }
 
-func routes(start Position, route [][]rune, nodes map[Position]*Node, slides bool) {
+func (nodes NodeMap) routes(start Position, route [][]rune, slides bool) {
 	queue := make([]*State, 1, len(nodes))
 	path := map[Position]bool{start: true}
 	queue[0] = &State{start, path, 0}
