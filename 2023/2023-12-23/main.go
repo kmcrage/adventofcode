@@ -6,7 +6,7 @@ import (
 	"log"
 	"maps"
 	"os"
-	"runtime/pprof"
+	"sync"
 )
 
 type Position struct {
@@ -15,30 +15,35 @@ type Position struct {
 }
 
 type State struct {
-	pos  Position
-	path map[Position]bool
-	dist int
+	pos     Position
+	path    map[Position]bool
+	visited int64
+	dist    int
+	depth   int
+	levels  []int
 }
 
 type Node struct {
-	pos    Position
-	to map[*Node]int
-	from map[*Node]bool
-	mask   int64
-	level  int
+	pos   Position
+	to    map[*Node]int
+	from  map[*Node]bool
+	mask  int64
+	level int
 }
 
 type NodeMap struct {
-	nodes map[Position]*Node
-	start Position
-	end Position
+	nodes  map[Position]*Node
+	start  Position
+	end    Position
 	levels []int
 }
 
 var Cardinals = []Position{{-1, 0}, {0, -1}, {1, 0}, {0, 1}}
 
 func (st *State) copy() *State {
-	return &State{st.pos, maps.Clone(st.path), st.dist}
+	levels := make([]int, len(st.levels))
+	copy(levels, st.levels)
+	return &State{st.pos, maps.Clone(st.path), st.visited, st.dist, st.depth, levels}
 }
 
 func parse(file string) ([][]rune, error) {
@@ -56,16 +61,80 @@ func parse(file string) ([][]rune, error) {
 	return route, nil
 }
 
+func worker(ch chan<- int, wg *sync.WaitGroup, dist int, nm *NodeMap, node, end *Node, visited int64, levels []int) {
+	defer wg.Done()
+	ch <- dist + nm.rundfs(node, end, visited, levels)
+}
+
 func (nm *NodeMap) longestpath() int {
-	fmt.Println("dfs...")
-	return nm.rundfs(nm.nodes[nm.start], nm.nodes[nm.end], nm.nodes[nm.start].mask, nm.levels)
+	fmt.Println("bfs + dfs...")
+	var wg sync.WaitGroup
+	ch := make(chan int, 1024) // Creating an buffered channel
+
+	bfsMaxDepth := 8
+
+	queue := make([]*State, 1)
+	levels := make([]int, len(nm.levels))
+	copy(levels, nm.levels)
+	queue[0] = &State{pos: nm.start, levels: levels}
+	visited := make(map[[2]int64]bool)
+
+	longest := 0
+	for len(queue) > 0 {
+		state := *queue[0]
+		queue = queue[1:]
+		node := nm.nodes[state.pos]
+		state.visited |= node.mask
+		key := [2]int64{node.mask, state.visited}
+		if _,ok := visited[key]; ok {
+			continue
+		}
+		visited[key] = true
+
+		if state.depth >= bfsMaxDepth {
+			wg.Add(1)
+			go worker(ch, &wg, state.dist, nm, node, nm.nodes[nm.end], state.visited, state.levels)
+			continue
+		}
+		if state.pos == nm.end {
+			longest = max(longest, state.dist)
+		}
+
+		state.levels[node.level] -= 1
+
+		for nghbr, dist := range nm.nodes[state.pos].to {
+			if state.visited&nghbr.mask != 0 {
+				continue
+			}
+			if state.levels[node.level] == 0 && nghbr.level > node.level {
+				continue
+			}
+			nstate := state.copy()
+			nstate.depth += 1
+			nstate.dist += dist
+			nstate.pos = nghbr.pos
+			queue = append(queue, nstate)
+		}
+	}
+
+	go func() {
+		wg.Wait()
+		close(ch) // Close the channel when all workers have finished
+	}()
+
+	for val := range ch {
+		longest = max(longest, val)
+	}
+	return longest
 }
 
 func (nm *NodeMap) rundfs(start, end *Node, visited int64, levels []int) int {
 	dfscache := make(map[[2]int64]int)
+	dfslevels := make([]int, len(levels))
+	copy(dfslevels, levels)
 
-	var dfs func (nodes *NodeMap, start, end *Node, visited int64, levels []int) int
-	dfs = func (nodes *NodeMap, start, end *Node, visited int64, levels []int) int {
+	var dfs func(nodes *NodeMap, start, end *Node, visited int64, levels []int) int
+	dfs = func(nodes *NodeMap, start, end *Node, visited int64, levels []int) int {
 		if start == end {
 			return 0
 		}
@@ -91,7 +160,7 @@ func (nm *NodeMap) rundfs(start, end *Node, visited int64, levels []int) int {
 		dfscache[key] = longest
 		return longest
 	}
-	return dfs(nm, start, end, start.mask, levels)
+	return dfs(nm, start, end, visited, dfslevels)
 }
 
 func (nm *NodeMap) junctions(route [][]rune, slides bool) {
@@ -111,9 +180,9 @@ func (nm *NodeMap) junctions(route [][]rune, slides bool) {
 			if jnctn > 2 {
 				pos := Position{i, j}
 				nm.nodes[pos] = &Node{pos: pos,
-					to: make(map[*Node]int, 4),
+					to:   make(map[*Node]int, 4),
 					from: make(map[*Node]bool, 4),
-					mask:   1 << len(nm.nodes)}
+					mask: 1 << len(nm.nodes)}
 			}
 		}
 	}
@@ -180,7 +249,7 @@ func (nm *NodeMap) analyse(route [][]rune, slides bool) {
 func (nm *NodeMap) routes(start Position, route [][]rune, slides bool) {
 	queue := make([]*State, 1, len(nm.nodes))
 	path := map[Position]bool{start: true}
-	queue[0] = &State{start, path, 0}
+	queue[0] = &State{start, path, 0, 0, 0, nil}
 
 	for len(queue) > 0 {
 		state := queue[0]
@@ -235,9 +304,9 @@ func (nm *NodeMap) routes(start Position, route [][]rune, slides bool) {
 }
 
 func main() {
-	f, _ := os.Create("day23.prof")
-	pprof.StartCPUProfile(f)
-	defer pprof.StopCPUProfile()
+	// f, _ := os.Create("day23.prof")
+	// pprof.StartCPUProfile(f)
+	// defer pprof.StopCPUProfile()
 	// go tool pprof -http=:8080 day23.prof
 
 	// file := "test.dat"
