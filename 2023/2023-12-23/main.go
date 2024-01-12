@@ -97,7 +97,7 @@ func (nm *NodeMap) longestpath() int {
 
 		state.levels[node.level] -= 1
 
-		for nghbr, dist := range nm.nodes[state.pos].to {
+		for nghbr, dist := range node.to {
 			if state.visited&nghbr.mask != 0 {
 				continue
 			}
