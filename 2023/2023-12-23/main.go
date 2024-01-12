@@ -98,6 +98,7 @@ func (nm *NodeMap) longestpath() int {
 		}
 		if state.pos == nm.end {
 			longest = max(longest, state.dist)
+			continue
 		}
 
 		state.levels[node.level] -= 1
