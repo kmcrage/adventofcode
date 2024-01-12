@@ -77,7 +77,6 @@ func (nm *NodeMap) longestpath() int {
 	levels := make([]int, len(nm.levels))
 	copy(levels, nm.levels)
 	queue[0] = &State{pos: nm.start, levels: levels}
-	visited := make(map[[2]int64]bool)
 
 	longest := 0
 	for len(queue) > 0 {
@@ -85,11 +84,6 @@ func (nm *NodeMap) longestpath() int {
 		queue = queue[1:]
 		node := nm.nodes[state.pos]
 		state.visited |= node.mask
-		key := [2]int64{node.mask, state.visited}
-		if _,ok := visited[key]; ok {
-			continue
-		}
-		visited[key] = true
 
 		if state.depth >= bfsMaxDepth {
 			wg.Add(1)
