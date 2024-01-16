@@ -10,6 +10,9 @@ import (
 func scoring(cards []string) []int {
 	scores := make([]int, len(cards))
 	for i, card := range cards {
+		if card == "" {
+			continue
+		}
 		cardParts := strings.SplitN(card, "|", 2)
 		winList := strings.Fields(strings.SplitN(cardParts[0], ":", 2)[1])
 		wins := make(map[string]bool, len(winList))
