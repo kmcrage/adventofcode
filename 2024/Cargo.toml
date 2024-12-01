@@ -1,0 +1,8 @@
+[package]
+name = "aoc2024"
+version = "0.1.0"
+authors = ["kevin <kevin.campbellrage@gmail.com>"]
+edition = "2021"
+
+[dependencies]
+scan-rules = "0.2.0"
