@@ -6,14 +6,30 @@ version = 3
 name = "aoc2024"
 version = "0.1.0"
 dependencies = [
+ "itertools 0.13.0",
  "scan-rules",
 ]
+
+[[package]]
+name = "either"
+version = "1.13.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "60b1af1c220855b6ceac025d3f6ecdd2b7c4894bfe9cd9bda4fbb4bc7c0d4cf0"
 
 [[package]]
 name = "itertools"
 version = "0.4.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c4a9b56eb56058f43dc66e58f40a214b2ccbc9f3df51861b63d51dec7b65bc3f"
+
+[[package]]
+name = "itertools"
+version = "0.13.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "413ee7dfc52ee1a4949ceeb7dbc8a33f2d6c088194d9f922fb8318faf1f01186"
+dependencies = [
+ "either",
+]
 
 [[package]]
 name = "lazy_static"
@@ -36,7 +52,7 @@ version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fc8b462b0f8ce7deae199b4b5cecbbe01006f808408d815c09a9f7b11ee044ac"
 dependencies = [
- "itertools",
+ "itertools 0.4.19",
  "lazy_static",
  "rustc_version",
  "strcursor",
