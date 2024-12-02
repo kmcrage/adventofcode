@@ -31,8 +31,8 @@ fn main() {
         .zip(right.iter())
         .map(|(&l, &r)| l.abs_diff(r))
         .sum();
-    println!("part1: {}", part1);
+    println!("part1: {part1}");
 
     let part2: usize = left.iter().map(|l| l * freq.get(l).unwrap_or(&0)).sum();
-    println!("part2: {}", part2);
+    println!("part2: {part2}");
 }

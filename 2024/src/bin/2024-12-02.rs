@@ -28,18 +28,21 @@ fn main() {
     let file = "./inputs/2024-12-02.txt";
     //let file = "./inputs/test.txt";
     let input = read_to_string(file).unwrap_or_else(|_| panic!("Failed to read file: {}", file));
-    let parsed = input.lines().map(|line| {
-        line.split_whitespace()
-            .map(|n| n.parse::<i32>().unwrap())
-            .collect()
-    });
+    let parsed: Vec<Vec<i32>> = input
+        .lines()
+        .map(|line| {
+            line.split_whitespace()
+                .map(|n| n.parse::<i32>().unwrap())
+                .collect()
+        })
+        .collect();
 
-    let part1: u32 = parsed.clone().map(|report| is_safe(&report) as u32).sum();
-    println!("part1: {}", part1);
+    let part1 = parsed.iter().filter(|report| is_safe(&report)).count();
+    println!("part1: {part1}");
 
-    let part2: u32 = parsed
-        .clone()
-        .map(|report| is_nearly_safe(&report) as u32)
-        .sum();
-    println!("part2: {}", part2);
+    let part2 = parsed
+        .iter()
+        .filter(|report| is_nearly_safe(&report))
+        .count();
+    println!("part2: {part2}");
 }
