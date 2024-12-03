@@ -1,9 +1,9 @@
 use itertools::Itertools;
 use std::fs::read_to_string;
 
-fn is_nearly_safe(report: &Vec<i32>) -> bool {
+fn is_nearly_safe(report: &[i32]) -> bool {
     for i in 0..report.len() {
-        let mut rep = report.clone().to_vec();
+        let mut rep = report.to_vec();
         rep.remove(i);
         if is_safe(&rep) {
             return true;
@@ -12,7 +12,7 @@ fn is_nearly_safe(report: &Vec<i32>) -> bool {
     false
 }
 
-fn is_safe(report: &Vec<i32>) -> bool {
+fn is_safe(report: &[i32]) -> bool {
     let mut safe = false;
 
     safe |= report.iter().tuple_windows().all(|(l, r)| l > r);
@@ -37,12 +37,12 @@ fn main() {
         })
         .collect();
 
-    let part1 = parsed.iter().filter(|report| is_safe(&report)).count();
+    let part1 = parsed.iter().filter(|report| is_safe(report)).count();
     println!("part1: {part1}");
 
     let part2 = parsed
         .iter()
-        .filter(|report| is_nearly_safe(&report))
+        .filter(|report| is_nearly_safe(report))
         .count();
     println!("part2: {part2}");
 }
