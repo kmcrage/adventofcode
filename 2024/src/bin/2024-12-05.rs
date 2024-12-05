@@ -21,13 +21,19 @@ impl Update {
     fn sorted(&self, rules: &Rules) -> Vec<usize> {
         let mut sorted = self.pages.clone();
         sorted.sort_by(|a, b| {
-            rules.iter().find_map(|rule| {
-                match (rule.first(), rule.get(1)) {
-                    (Some(x), Some(y)) if x == a && y == b => Some(Ordering::Less),
-                    (Some(x), Some(y)) if x == b && y == a => Some(Ordering::Greater),
-                    _ => None,
-                }
-            }).unwrap_or(Ordering::Equal)
+            rules
+                .iter()
+                .find_map(|rule| {
+                    if let (Some(x), Some(y)) = (rule.first(), rule.get(1)) {
+                        if x == a && y == b {
+                            return Some(Ordering::Less);
+                        } else if x == b && y == a {
+                            return Some(Ordering::Greater);
+                        }
+                    }
+                    None
+                })
+                .unwrap_or(Ordering::Equal)
         });
         sorted
     }
