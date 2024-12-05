@@ -10,32 +10,24 @@ struct Update {
 
 impl Update {
     fn validate(&self, rule: &[usize]) -> bool {
-        let i = rule.first();
-        let j = rule.get(1);
-        match (i, j) {
-            (Some(ii), Some(jj)) => {
-                let u = self.map.get(ii);
-                let v = self.map.get(jj);
-                match (u, v) {
-                    (Some(uu), Some(vv)) => uu < vv,
-                    _ => true,
-                }
+        if let (Some(&ii), Some(&jj)) = (rule.first(), rule.get(1)) {
+            if let (Some(&uu), Some(&vv)) = (self.map.get(&ii), self.map.get(&jj)) {
+                return uu < vv;
             }
-            _ => true,
         }
+        true
     }
 
     fn sorted(&self, rules: &Rules) -> Vec<usize> {
         let mut sorted = self.pages.clone();
         sorted.sort_by(|a, b| {
-            for rule in rules {
-                if rule.first() == Some(a) && rule.get(1) == Some(b) {
-                    return Ordering::Less;
-                } else if rule.first() == Some(b) && rule.get(1) == Some(a) {
-                    return Ordering::Greater;
+            rules.iter().find_map(|rule| {
+                match (rule.first(), rule.get(1)) {
+                    (Some(x), Some(y)) if x == a && y == b => Some(Ordering::Less),
+                    (Some(x), Some(y)) if x == b && y == a => Some(Ordering::Greater),
+                    _ => None,
                 }
-            }
-            Ordering::Equal
+            }).unwrap_or(Ordering::Equal)
         });
         sorted
     }
