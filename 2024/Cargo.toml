@@ -5,6 +5,8 @@ authors = ["kevin <kevin.campbellrage@gmail.com>"]
 edition = "2021"
 
 [dependencies]
+hashbrown = { version = "0.15.2", features = ["rayon"] }
 itertools = "0.13.0"
+rayon = "1.10.0"
 regex = "1.11.1"
 scan-rules = "0.2.0"
