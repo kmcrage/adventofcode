@@ -2,3 +2,5 @@ dist-newstyle
 .ghc.*
 *.prof
 *.dat
+perf.data
+*.svg
