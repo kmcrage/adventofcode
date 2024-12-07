@@ -1,5 +1,4 @@
 // use rayon::prelude::*;
-use std::collections::VecDeque;
 use std::fs::read_to_string;
 
 fn part(input: &str, mode: bool) -> usize {
@@ -8,35 +7,35 @@ fn part(input: &str, mode: bool) -> usize {
         .map(|line| {
             let (ans_str, num_str) = line.split_once(": ").unwrap();
             let ans = ans_str.parse::<usize>().unwrap();
-            let mut nums: VecDeque<usize> = num_str
+            let nums: Vec<usize> = num_str
                 .split_whitespace()
                 .map(|n| n.parse::<usize>().unwrap())
                 .collect();
 
-            let mut results: VecDeque<usize> = Default::default();
-            results.push_back(nums.pop_front().unwrap());
-            while !nums.is_empty() {
-                let mut results_next: VecDeque<usize> = Default::default();
-                let n = nums.pop_front().unwrap();
-                for m in results {
-                    let mut candidates = vec![m + n, m * n];
-                    if mode {
-                        candidates.push(format!("{m}{n}").parse::<usize>().unwrap());
-                    }
-                    for candidate in candidates {
-                        if candidate <= ans {
-                            results_next.push_back(candidate);
-                        }
-                    }
-                }
-                results = results_next;
-            }
-            if results.contains(&ans) {
+            if dfs(nums[0], &nums[1..], ans, mode) {
                 return ans;
             }
             0
         })
         .sum()
+}
+
+fn dfs(num: usize, nums: &[usize], ans: usize, mode: bool) -> bool {
+    if nums.is_empty() {
+        return num == ans;
+    }
+
+    let m = nums[0];
+    let mut candidates = vec![num + m, num * m];
+    if mode {
+        candidates.push(format!("{num}{m}").parse::<usize>().unwrap());
+    }
+    for candidate in candidates {
+        if candidate <= ans && dfs(candidate, &nums[1..], ans, mode) {
+            return true;
+        }
+    }
+    false
 }
 
 fn main() {
