@@ -28,7 +28,7 @@ fn dfs(num: usize, nums: &[usize], ans: usize, mode: bool) -> bool {
     let m = nums[0];
     let mut candidates = vec![num + m, num * m];
     if mode {
-        candidates.push(format!("{num}{m}").parse::<usize>().unwrap());
+        candidates.push(m + num * 10_usize.pow(m.to_string().len() as u32));
     }
     for candidate in candidates {
         if candidate <= ans && dfs(candidate, &nums[1..], ans, mode) {
