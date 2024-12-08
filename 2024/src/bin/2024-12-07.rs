@@ -1,18 +1,18 @@
 // use rayon::prelude::*;
 use std::fs::read_to_string;
 
-fn part(input: &str, mode: bool) -> usize {
+fn part(input: &str, mode: bool) -> isize {
     input
         .lines()
         .map(|line| {
             let (ans_str, num_str) = line.split_once(": ").unwrap();
-            let ans = ans_str.parse::<usize>().unwrap();
-            let nums: Vec<usize> = num_str
+            let ans = ans_str.parse::<isize>().unwrap();
+            let nums: Vec<isize> = num_str
                 .split_whitespace()
-                .map(|n| n.parse::<usize>().unwrap())
+                .map(|n| n.parse::<isize>().unwrap())
                 .collect();
 
-            if dfs(nums[0], &nums[1..], ans, mode) {
+            if dfs(ans, &nums, mode) {
                 return ans;
             }
             0
@@ -20,18 +20,21 @@ fn part(input: &str, mode: bool) -> usize {
         .sum()
 }
 
-fn dfs(num: usize, nums: &[usize], ans: usize, mode: bool) -> bool {
-    if nums.is_empty() {
-        return num == ans;
+fn dfs(ans: isize, nums: &[isize], mode: bool) -> bool {
+    if nums.len() == 1 {
+        return nums[0] == ans;
     }
 
-    let m = nums[0];
-    let mut candidates = vec![num + m, num * m];
-    if mode {
-        candidates.push(m + num * 10_usize.pow(m.to_string().len() as u32));
+    let num = nums[nums.len() - 1];
+    if num < ans && dfs(ans - num, &nums[..nums.len() - 1], mode) {
+        return true;
     }
-    for candidate in candidates {
-        if candidate <= ans && dfs(candidate, &nums[1..], ans, mode) {
+    if ans % num == 0 && dfs(ans / num, &nums[..nums.len() - 1], mode) {
+        return true;
+    }
+    if mode {
+        let exp = 10_isize.pow(num.to_string().len() as u32);
+        if ans % exp == num && dfs(ans / exp, &nums[..nums.len() - 1], mode) {
             return true;
         }
     }
