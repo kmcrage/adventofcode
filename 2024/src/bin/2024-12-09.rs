@@ -72,8 +72,9 @@ fn to_chunk_compact(chunks: &[Chunk]) -> Vec<Chunk> {
                 Some(p) => {
                     let pos = p + offset;
                     pos_cache[file.size] = pos;
+                    
                     let gap = working[pos];
-                    working[p + offset] = file;
+                    working[pos] = file;
                     if gap.size > file.size {
                         working.insert(
                             pos + 1,
