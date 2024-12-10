@@ -68,17 +68,17 @@ fn to_chunk_compact(chunks: &[Chunk]) -> Vec<Chunk> {
                 .position(|chunk| chunk.size >= file.size && chunk.index.is_none())
             {
                 Some(p) => {
-                    let gap = working.remove(p);
+                    let gap = working[p];
+                    working[p] = file;
                     if gap.size > file.size {
                         working.insert(
-                            p,
+                            p + 1,
                             Chunk {
                                 size: gap.size - file.size,
                                 index: None,
                             },
                         );
                     }
-                    working.insert(p, file);
 
                     files.push(Chunk {
                         size: file.size,
