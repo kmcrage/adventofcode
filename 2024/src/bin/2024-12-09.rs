@@ -58,21 +58,26 @@ fn to_block_compact(blocks: &[isize]) -> Vec<usize> {
 }
 
 fn to_chunk_compact(chunks: &[Chunk]) -> Vec<Chunk> {
+    let mut pos_cache = [0_usize; 10]; // cahe the last pos we saw this sized gap
     let mut working: Vec<Chunk> = chunks.to_vec();
     let mut files: Vec<Chunk> = Default::default();
 
     while let Some(file) = working.pop() {
-        if file.index.is_some() {
-            match working
+        if file.index.is_some() && pos_cache[file.size] < working.len() {
+            let offset = pos_cache[file.size];
+            match working[offset..]
                 .iter()
                 .position(|chunk| chunk.size >= file.size && chunk.index.is_none())
             {
                 Some(p) => {
-                    let gap = working[p];
-                    working[p] = file;
+                    let pos = p + offset;
+                    pos_cache[file.size] = pos;
+                    
+                    let gap = working[pos];
+                    working[pos] = file;
                     if gap.size > file.size {
                         working.insert(
-                            p + 1,
+                            pos + 1,
                             Chunk {
                                 size: gap.size - file.size,
                                 index: None,
