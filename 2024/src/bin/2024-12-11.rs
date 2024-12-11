@@ -1,6 +1,7 @@
 use hashbrown::HashMap;
 use num::pow;
 use std::fs::read_to_string;
+use std::time::Instant;
 
 type Stones = HashMap<usize, usize>;
 
@@ -64,7 +65,10 @@ fn main() {
     // let file = "./inputs/test.txt";
     let file = "./inputs/2024-12-11.txt";
     let input = read_to_string(file).unwrap_or_else(|_| panic!("Failed to read file: {}", file));
+    
+    let before = Instant::now();
     let stones = to_stones(input.as_str());
     println!("part1: {:?}", blinks(&stones, 25));
     println!("part2: {:?}", blinks(&stones, 75));
+    println!("Elapsed time: {:.2?}", before.elapsed());
 }
