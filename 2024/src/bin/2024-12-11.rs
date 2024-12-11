@@ -27,15 +27,15 @@ fn blink(input: &Stones) -> Stones {
             updates.push(1);
         } else {
             let digits = stone.ilog10() as usize + 1;
-            let md = pow(10, digits / 2);
             if digits % 2 == 0 {
+                let md = pow(10, digits / 2);
                 updates.push(stone / md);
                 updates.push(stone % md);
             } else {
                 updates.push(stone * 2024);
             }
         }
-        
+
         for update in updates {
             stones
                 .entry(update)
