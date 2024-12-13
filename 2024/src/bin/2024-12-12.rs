@@ -42,20 +42,19 @@ impl Plan {
 
             for dir in self.directions.iter().enumerate() {
                 let wall = (plot, dir.0);
-                walls.insert(wall);
                 let next_plot = plot as isize + dir.1;
-                if next_plot < 0 {
-                    continue;
-                }
-                let next_plot = next_plot as usize;
-                if let Some(next_chr) = self.map.get(next_plot) {
-                    if next_chr == chr {
-                        walls.remove(&wall);
-                        if !visited.contains(&next_plot) {
-                            plots.push_back(next_plot);
+                if next_plot >= 0 {
+                    let next_plot = next_plot as usize;
+                    if let Some(next_chr) = self.map.get(next_plot) {
+                        if next_chr == chr {
+                            if !visited.contains(&next_plot) {
+                                plots.push_back(next_plot);
+                            }
+                            continue;
                         }
                     }
                 }
+                walls.insert(wall);
             }
         }
         let price1 = visited.len() * walls.len();
