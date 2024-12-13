@@ -1,89 +1,96 @@
-use hashbrown::HashSet;
-use std::collections::VecDeque;
+//use hashbrown::HashSet;
+use itertools::Itertools;
+//use std::collections::VecDeque;
 use std::fs::read_to_string;
 
-struct Plan {
-    map: Vec<char>,
-    // width: usize,
-    directions: [isize; 4],
+#[derive(Debug, Default)]
+struct Claw {
+    a: (isize, isize),
+    b: (isize, isize),
+    prize: (isize, isize),
 }
 
-impl Plan {
-    fn from(input: &str) -> Plan {
-        let width = input.chars().position(|c| c == '\n').unwrap() as isize + 1;
-        let directions = [1, width, -1, -width];
-        Plan {
-            map: input.chars().collect(),
-            // width,
-            directions,
+impl Claw {
+    fn from(inputs: &str) -> Vec<Claw> {
+        let mut claws: Vec<Claw> = Default::default();
+
+        for chunk in inputs.split("\n\n") {
+            let lines = chunk.lines().collect_vec();
+
+            let mut claw: Claw = Default::default();
+            claw.a.0 = Claw::_parse_button(lines[0], 0);
+            claw.a.1 = Claw::_parse_button(lines[0], 1);
+            claw.b.0 = Claw::_parse_button(lines[1], 0);
+            claw.b.1 = Claw::_parse_button(lines[1], 1);
+            claw.prize.0 = Claw::_parse_prize(lines[2], 0);
+            claw.prize.1 = Claw::_parse_prize(lines[2], 1);
+
+            claws.push(claw);
         }
+        claws
     }
 
-    fn sides(&self, walls: &HashSet<(usize, usize)>) -> usize {
-        walls
-            .iter()
-            .filter(|(p, d)| {
-                let nhbr = *p as isize + self.directions[(d + 1) % 4];
-                !walls.contains(&(nhbr as usize, *d))
-            })
-            .count()
+    fn _parse_prize(input: &str, pos: usize) -> isize {
+        Claw::_parse_generic(input, "=", pos)
     }
 
-    fn analyse_area(&self, seed: usize, chr: &char) -> (HashSet<usize>, (usize, usize)) {
-        let mut walls: HashSet<(usize, usize)> = Default::default(); // (plot, dir)
-        let mut visited: HashSet<usize> = Default::default();
-        let mut plots: VecDeque<usize> = VecDeque::from([seed]);
+    fn _parse_button(input: &str, pos: usize) -> isize {
+        Claw::_parse_generic(input, "+", pos)
+    }
 
-        while let Some(plot) = plots.pop_front() {
-            if visited.contains(&plot) {
-                continue;
-            }
-            visited.insert(plot);
+    fn _parse_generic(input: &str, spt: &str, pos: usize) -> isize {
+        input
+            .split(spt)
+            .nth(pos + 1)
+            .unwrap()
+            .split(",")
+            .next()
+            .unwrap()
+            .parse::<isize>()
+            .unwrap()
+    }
 
-            for dir in self.directions.iter().enumerate() {
-                let wall = (plot, dir.0);
-                let next_plot = plot as isize + dir.1;
-                if next_plot < 0 {
-                    walls.insert(wall);
-                    continue;
-                }
-                let next_plot = next_plot as usize;
-                if let Some(next_chr) = self.map.get(next_plot) {
-                    if next_chr == chr && !visited.contains(&next_plot) {
-                        plots.push_back(next_plot);
-                        continue;
-                    }
-                }
-                walls.insert(wall);
-            }
+    fn cost(&self, small: bool) -> isize {
+        let mut prize = self.prize;
+        if !small {
+            prize = (prize.0 + 10000000000000, prize.1 + 10000000000000);
         }
-        let price1 = visited.len() * walls.len();
-        let price2 = visited.len() * self.sides(&walls);
-        (visited, (price1, price2))
-    }
 
-    fn fence_price(&self) -> (usize, usize) {
-        let mut prices: (usize, usize) = (0, 0);
-        let mut visited: HashSet<usize> = Default::default();
-
-        for (seed, chr) in self.map.iter().enumerate() {
-            if chr == &'\n' || visited.contains(&seed) {
-                continue;
-            }
-            let (vis, price) = self.analyse_area(seed, chr);
-            visited.extend(&vis);
-            prices.0 += price.0;
-            prices.1 += price.1;
+        // non-invertible...
+        let det = self.a.0 * self.b.1 - self.a.1 * self.b.0;
+        if det == 0 {
+            return 0;
         }
-        prices
+        let press = (
+            self.b.1 * prize.0 - self.b.0 * prize.1,
+            self.a.0 * prize.1 - self.a.1 * prize.0,
+        );
+
+        // ...fractional presses...
+        if press.0 % det != 0 || press.1 % det != 0 {
+            return 0;
+        }
+        let press = (press.0 / det, press.1 / det);
+
+        // ...too many presses...
+        if small && (!(0..=100).contains(&(press.0)) || !(0..=100).contains(&(press.1))) {
+            return 0;
+        }
+
+        3 * press.0 + press.1
     }
+}
+
+fn cost(claws: &[Claw], small: bool) -> isize {
+    claws.iter().map(|c| c.cost(small)).sum()
 }
 
 fn main() {
-    let file = "./inputs/test.txt";
-    // let file = "./inputs/2024-12-13.txt";
+    // let file = "./inputs/test.txt";
+    let file = "./inputs/2024-12-13.txt";
     let input = read_to_string(file).unwrap_or_else(|_| panic!("Failed to read file: {}", file));
 
-    let plan = Plan::from(input.as_str());
-    println!("parts: {:?}", plan.fence_price());
+    let claws = Claw::from(input.as_str());
+    println!("part1: {:?}", cost(&claws, true));
+    println!("part2: {:?}", cost(&claws, false));
 }
