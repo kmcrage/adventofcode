@@ -5,6 +5,7 @@ authors = ["kevin <kevin.campbellrage@gmail.com>"]
 edition = "2021"
 
 [dependencies]
+binary-heap-plus = "0.5.0"
 hashbrown = { version = "0.15.2", features = ["rayon"] }
 itertools = "0.13.0"
 num = "0.4.3"
