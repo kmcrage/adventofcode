@@ -9,7 +9,7 @@ struct Maze {
     directions: [isize; 4],
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug)]
 struct State {
     cost: usize,
     position: usize,
@@ -93,8 +93,8 @@ impl Maze {
         // Examine the frontier with lower cost nodes first (min-heap)
         while let Some(state) = heap.pop() {
             // Important as we may have already found a better way
-            if let Some(prev_prio) = costs.get(&(state.position, state.dir)) {
-                if state.cost > *prev_prio {
+            if let Some(&cost) = costs.get(&(state.position, state.dir)) {
+                if state.cost > cost {
                     continue;
                 }
             }
@@ -112,8 +112,8 @@ impl Maze {
             // a lower cost going through this node
             for next in self.nhbrs(&state) {
                 // If so, add it to the frontier and continue
-                let next_cost = costs.get(&(next.position, next.dir));
-                if next_cost.is_none() || next_cost.unwrap() >= &next.cost {
+                let cost = costs.get(&(next.position, next.dir));
+                if cost.is_none() || cost.unwrap() >= &next.cost {
                     heap.push(next.clone());
                     // Relaxation, we have now found a better way
                     costs.insert((next.position, next.dir), next.cost);
