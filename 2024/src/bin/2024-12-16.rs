@@ -69,7 +69,7 @@ impl Maze {
     }
 
     fn shortest_path_len(&self) -> (usize, usize) {
-        let results = self.shortest_path().clone();
+        let results = self.shortest_path();
         let cost = results[0].cost;
         let mut visited: HashSet<usize> = Default::default();
         for result in results {
@@ -92,6 +92,11 @@ impl Maze {
 
         // Examine the frontier with lower cost nodes first (min-heap)
         while let Some(state) = heap.pop() {
+            // don't go past the cost of finishing
+            if !results.is_empty() && results[0].cost < state.cost{
+                return results;
+            }
+
             // Important as we may have already found a better way
             if let Some(&cost) = costs.get(&(state.position, state.dir)) {
                 if state.cost > cost {
@@ -101,9 +106,6 @@ impl Maze {
 
             // Alternatively we could have continued to find all shortest paths
             if state.position == self.end {
-                for d in 0..4_usize {
-                    costs.insert((state.position, d), state.cost);
-                }
                 results.push(state);
                 continue;
             }
@@ -132,3 +134,4 @@ fn main() {
     let maze = Maze::from(input.as_str());
     println!("parts: {:?}", maze.shortest_path_len());
 }
+//parts: (94436, 481)
