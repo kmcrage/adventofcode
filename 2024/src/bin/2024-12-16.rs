@@ -4,6 +4,7 @@ use std::{cmp::Ordering, fs::read_to_string};
 
 struct Maze {
     map: Vec<char>,
+    width: usize,
     start: usize,
     end: usize,
     directions: [isize; 4],
@@ -11,6 +12,7 @@ struct Maze {
 
 #[derive(Clone, Debug)]
 struct State {
+    priority: usize,
     cost: usize,
     position: usize,
     dir: usize,
@@ -19,7 +21,7 @@ struct State {
 
 impl State {
     fn cmp_state(a: &State, b: &State) -> Ordering {
-        b.cost.cmp(&a.cost)
+        b.priority.cmp(&a.priority)
     }
 }
 
@@ -32,6 +34,7 @@ impl Maze {
         let directions = [1, width as isize, -1, -(width as isize)];
         Maze {
             map,
+            width,
             start,
             end,
             directions,
@@ -46,6 +49,7 @@ impl Maze {
             let mut path = state.path.clone();
             path.push(step);
             nhbrs.push(State {
+                priority: state.cost + 1 + self.dist_to_end(step),
                 cost: state.cost + 1,
                 position: step,
                 dir: state.dir,
@@ -53,12 +57,14 @@ impl Maze {
             });
         }
         nhbrs.push(State {
+            priority: state.priority + 1000,
             cost: state.cost + 1000,
             position: state.position,
             dir: (state.dir + 1) % 4,
             path: state.path.clone(),
         });
         nhbrs.push(State {
+            priority: state.priority + 1000,
             cost: state.cost + 1000,
             position: state.position,
             dir: (state.dir + 3) % 4,
@@ -78,12 +84,19 @@ impl Maze {
         (cost, visited.len())
     }
 
+    fn dist_to_end(&self, pos: usize) -> usize {
+        let (ex, ey) = (self.end/self.width, self.end % self.width);
+        let (px, py) = (pos/self.width, pos % self.width);
+        ex.abs_diff(px) + ey.abs_diff(py)
+    }
+
     fn shortest_path(&self) -> Vec<State> {
-        let mut costs: HashMap<(usize, usize), usize> = Default::default();
+        let mut priorities: HashMap<(usize, usize), usize> = Default::default();
         let mut heap = BinaryHeap::new_by(State::cmp_state);
         let mut results: Vec<State> = Default::default();
 
         heap.push(State {
+            priority: self.dist_to_end(self.start),
             cost: 0,
             position: self.start,
             dir: 0,
@@ -93,13 +106,13 @@ impl Maze {
         // Examine the frontier with lower cost nodes first (min-heap)
         while let Some(state) = heap.pop() {
             // don't go past the cost of finishing
-            if !results.is_empty() && results[0].cost < state.cost{
+            if !results.is_empty() && results[0].priority < state.priority{
                 return results;
             }
 
             // Important as we may have already found a better way
-            if let Some(&cost) = costs.get(&(state.position, state.dir)) {
-                if state.cost > cost {
+            if let Some(&priority) = priorities.get(&(state.position, state.dir)) {
+                if state.priority > priority {
                     continue;
                 }
             }
@@ -114,11 +127,11 @@ impl Maze {
             // a lower cost going through this node
             for next in self.nhbrs(&state) {
                 // If so, add it to the frontier and continue
-                let cost = costs.get(&(next.position, next.dir));
-                if cost.is_none() || cost.unwrap() >= &next.cost {
+                let priority = priorities.get(&(next.position, next.dir));
+                if priority.is_none() || priority.unwrap() >= &next.priority {
                     heap.push(next.clone());
                     // Relaxation, we have now found a better way
-                    costs.insert((next.position, next.dir), next.cost);
+                    priorities.insert((next.position, next.dir), next.priority);
                 }
             }
         }
