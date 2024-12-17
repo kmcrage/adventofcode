@@ -1,6 +1,5 @@
 use num::pow;
 use std::fs::read_to_string;
-// use std::ops::BitXor;
 
 fn from(input: &str) -> ([usize; 3], Vec<usize>) {
     let (input_state, input_program) = input.split_once("\n\n").unwrap();
@@ -82,12 +81,6 @@ fn part2(program: &[usize]) -> usize {
     let mut idx = program.len() - 1;
 
     loop {
-        let tests: Vec<(usize, Vec<usize>)> = (0..=div)
-            .map(|i| {
-                let t = min + (i * min.abs_diff(max)) / div;
-                (t, run_program(&[t, 0, 0], program))
-            })
-            .collect();
         if idx == 1 {
             println!("check final interval, width {}", min.abs_diff(max));
             for i in min..=max {
@@ -95,7 +88,15 @@ fn part2(program: &[usize]) -> usize {
                     return i;
                 }
             }
+            panic!("final interval had no solution!");
         }
+
+        let tests: Vec<(usize, Vec<usize>)> = (0..=div)
+            .map(|i| {
+                let t = min + (i * min.abs_diff(max)) / div;
+                (t, run_program(&[t, 0, 0], program))
+            })
+            .collect();
 
         let hits: Vec<usize> = tests
             .iter()
