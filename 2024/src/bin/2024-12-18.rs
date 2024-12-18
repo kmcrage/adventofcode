@@ -5,6 +5,7 @@ use std::fs::read_to_string;
 
 struct Memory {
     bytes: HashMap<usize, usize>,
+    results: Vec<String>,
     width: usize,
     start: usize,
     end: usize,
@@ -28,6 +29,7 @@ impl Memory {
     fn from(input: &str, max: usize) -> Self {
         let width = max + 3; // allow boundaries
         let directions = [1, width as isize, -1, -(width as isize)];
+        let results = input.lines().map(String::from).collect();
         let bytes = input
             .lines()
             .enumerate()
@@ -41,6 +43,7 @@ impl Memory {
             .collect();
         Memory {
             bytes,
+            results,
             width,
             start: 1 + width,
             end: width - 2 + (width - 2) * width, // offset by one
@@ -133,20 +136,7 @@ impl Memory {
                 min = mid;
             }
         }
-        self.format_byte(min)
-    }
-
-    fn format_byte(&self, time: usize) -> String {
-        for (&k, &v) in self.bytes.iter() {
-            if v == time {
-                return format!(
-                    "{},{}",
-                    (k / self.width).saturating_sub(1),
-                    (k % self.width).saturating_sub(1)
-                );
-            }
-        }
-        "".to_string()
+        self.results.get(min).unwrap().to_string()
     }
 }
 
