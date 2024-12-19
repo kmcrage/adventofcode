@@ -15,7 +15,7 @@ fn simple_matches(towels: &[String], patterns: &[String]) -> usize {
     let regex = format!("^({})*$", patterns.join("|"));
     let re = Regex::new(&regex).unwrap();
 
-    towels.iter().filter(|towel| re.is_match(*towel)).count()
+    towels.iter().filter(|towel| re.is_match(towel)).count()
 }
 
 fn total_matches(towels: &[String], patterns: &[String]) -> usize {
