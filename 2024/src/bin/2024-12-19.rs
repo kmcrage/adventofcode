@@ -2,30 +2,30 @@ use hashbrown::HashMap;
 use regex::Regex;
 use std::fs::read_to_string;
 
-fn from(input: &str) -> (Vec<String>, Vec<String>) {
+fn from(input: &str) -> (Vec<&str>, Vec<&str>) {
     let (in_a, in_b) = input.split_once("\n\n").unwrap();
-    let towels = in_b.lines().map(String::from).collect();
-    let patterns = in_a.split(", ").map(String::from).collect();
+    let towels = in_b.lines().collect();
+    let patterns = in_a.split(", ").collect();
 
     (towels, patterns)
 }
 
-fn simple_matches(towels: &[String], patterns: &[String]) -> usize {
+fn simple_matches(towels: &[&str], patterns: &[&str]) -> usize {
     let regex = format!("^({})*$", patterns.join("|"));
     let re = Regex::new(&regex).unwrap();
 
     towels.iter().filter(|towel| re.is_match(towel)).count()
 }
 
-fn total_matches(towels: &[String], patterns: &[String]) -> usize {
-    let mut cache: HashMap<String, usize> = HashMap::new();
+fn total_matches(towels: &[&str], patterns: &[&str]) -> usize {
+    let mut cache: HashMap<&str, usize> = HashMap::new();
     towels
         .iter()
         .map(|towel| matches_dp(towel, patterns, &mut cache))
         .sum()
 }
 
-fn matches_dp(towel: &str, patterns: &[String], cache: &mut HashMap<String, usize>) -> usize {
+fn matches_dp<'a>(towel: &'a str, patterns: &[&str], cache: &mut HashMap<&'a str, usize>) -> usize {
     if towel.is_empty() {
         return 1;
     }
@@ -38,7 +38,7 @@ fn matches_dp(towel: &str, patterns: &[String], cache: &mut HashMap<String, usiz
         .filter(|&p| towel.starts_with(p))
         .map(|p| matches_dp(&towel[p.len()..], patterns, cache))
         .sum();
-    cache.insert(towel.to_string(), cnt);
+    cache.insert(towel, cnt);
     cnt
 }
 
