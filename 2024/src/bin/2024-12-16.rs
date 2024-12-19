@@ -116,6 +116,8 @@ impl Maze {
                     continue;
                 }
             }
+            // Relaxation, we have now found a better way
+            priorities.insert((state.position, state.dir), state.priority);
 
             // Alternatively we could have continued to find all shortest paths
             if state.position == self.end {
@@ -130,8 +132,6 @@ impl Maze {
                 let priority = priorities.get(&(next.position, next.dir));
                 if priority.is_none() || priority.unwrap() >= &next.priority {
                     heap.push(next.clone());
-                    // Relaxation, we have now found a better way
-                    priorities.insert((next.position, next.dir), next.priority);
                 }
             }
         }
