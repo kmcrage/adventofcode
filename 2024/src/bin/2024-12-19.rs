@@ -4,11 +4,10 @@ use std::fs::read_to_string;
 
 fn from(input: &str) -> (Vec<String>, Vec<String>) {
     let (in_a, in_b) = input.split_once("\n\n").unwrap();
+    let towels = in_b.lines().map(String::from).collect();
+    let patterns = in_a.split(", ").map(String::from).collect();
 
-    (
-        in_b.lines().map(String::from).collect(),
-        in_a.split(", ").map(String::from).collect(),
-    )
+    (towels, patterns)
 }
 
 fn simple_matches(towels: &[String], patterns: &[String]) -> usize {
@@ -34,12 +33,11 @@ fn matches_dp(towel: &str, patterns: &[String], cache: &mut HashMap<String, usiz
         return result;
     }
 
-    let mut cnt = 0;
-    for pattern in patterns {
-        if towel.starts_with(pattern) {
-            cnt += matches_dp(&towel[pattern.len()..], patterns, cache);
-        }
-    }
+    let cnt = patterns
+        .iter()
+        .filter(|&p| towel.starts_with(p))
+        .map(|p| matches_dp(&towel[p.len()..], patterns, cache))
+        .sum();
     cache.insert(towel.to_string(), cnt);
     cnt
 }
