@@ -153,7 +153,7 @@ impl Maze {
             visited.insert(state.position);
 
             // find all the shortcuts from this point
-            rt += self.shortcuts(&solve, &state, speedup, cheat);
+            rt += self.shortcuts(solve, &state, speedup, cheat);
 
             for next in self.nhbrs(&state) {
                 if !visited.contains(&next.position) {
