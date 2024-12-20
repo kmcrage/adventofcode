@@ -1,7 +1,7 @@
-use binary_heap_plus::BinaryHeap;
 use hashbrown::{HashMap, HashSet};
 use std::cmp::min;
 use std::fs::read_to_string;
+use std::collections::VecDeque;
 
 struct Maze {
     map: Vec<char>,
@@ -79,16 +79,15 @@ impl Maze {
 
     fn shortest_fwd_path(&self) -> Solve {
         let mut costs: HashMap<usize, usize> = Default::default();
-        let mut heap = BinaryHeap::new_by(|a: &State, b: &State| b.cost.cmp(&a.cost));
-
-        heap.push(State {
+        let mut queue: VecDeque<State> = Default::default();
+        queue.push_back(State {
             cost: 0,
             position: self.start,
             cheats: Default::default(),
         });
 
         // Examine the frontier with lower cost nodes first (min-heap)
-        while let Some(state) = heap.pop() {
+        while let Some(state) = queue.pop_front() {
             // Alternatively we could have continued to find all shortest paths
             if state.position == self.end {
                 costs.insert(state.position, state.cost);
@@ -113,11 +112,11 @@ impl Maze {
                 // If so, add it to the frontier and continue
                 match costs.get(&next.position) {
                     None => {
-                        heap.push(next.clone());
+                        queue.push_back(next);
                     }
                     Some(&cost) => {
                         if cost > state.cost {
-                            heap.push(next.clone());
+                            queue.push_back(next);
                         }
                     }
                 }
@@ -130,20 +129,20 @@ impl Maze {
     }
 
     fn shortest_bkwd_path(&self, solve: &Solve, speedup: usize, cheat: usize) -> usize {
-        let mut heap = BinaryHeap::new_by(|a: &State, b: &State| b.cost.cmp(&a.cost));
+        let mut queue: VecDeque<State> = Default::default();
         let mut visited: HashSet<usize> = Default::default();
-        let mut rt = 0;
+        let mut shortcuts = 0;
 
-        heap.push(State {
+        queue.push_back(State {
             cost: 0,
             position: self.end,
             cheats: Default::default(),
         });
 
         // Examine the frontier with lower cost nodes first (min-heap)
-        while let Some(state) = heap.pop() {
+        while let Some(state) = queue.pop_front() {
             if state.position == self.start || state.cost + speedup > solve.length {
-                return rt;
+                return shortcuts;
             }
 
             // using a heap ensures the first visit is the best
@@ -153,15 +152,15 @@ impl Maze {
             visited.insert(state.position);
 
             // find all the shortcuts from this point
-            rt += self.shortcuts(&solve, &state, speedup, cheat);
+            shortcuts += self.shortcuts(solve, &state, speedup, cheat);
 
             for next in self.nhbrs(&state) {
                 if !visited.contains(&next.position) {
-                    heap.push(next.clone());
+                    queue.push_back(next);
                 }
             }
         }
-        rt
+        shortcuts
     }
 }
 
