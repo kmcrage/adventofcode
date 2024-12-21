@@ -1,5 +1,4 @@
 use hashbrown::{HashMap, HashSet};
-use std::cmp::min;
 use std::fs::read_to_string;
 use std::collections::VecDeque;
 
@@ -19,9 +18,9 @@ struct State {
 }
 
 #[derive(Clone, Default, Debug)]
-struct Solve {
+struct Solution {
     length: usize,
-    map: HashMap<usize, usize>,
+    to_start: HashMap<usize, usize>,
 }
 
 impl Maze {
@@ -56,19 +55,26 @@ impl Maze {
         nhbrs
     }
 
-    fn shortcuts(&self, solve: &Solve, state: &State, speedup: usize, cheat: usize) -> usize {
+    fn shortcuts(&self, solution: &Solution, state: &State, speedup: usize, cheat: usize) -> usize {
         let mut cut = 0;
         let (px, py) = (state.position % self.width, state.position / self.width);
 
-        for i in px.saturating_sub(cheat)..=min(px + cheat, self.width - 1) {
-            for j in py.saturating_sub(cheat)..=min(py + cheat, self.width - 1) {
-                let jump = i.abs_diff(px) + j.abs_diff(py);
-                if jump > cheat {
+        for dx in -(cheat as isize)..=cheat as isize {
+            let x= px as isize + dx;
+            if x <0 || x >= self.width as isize {
+                continue;
+            }
+            let x= x as usize;
+            for dy in (-(cheat as isize)+dx.abs())..=(cheat as isize - dx.abs()) {
+                let y= py as isize + dy;
+                if y <0 || y >= self.width as isize {
                     continue;
                 }
-                let next = i + j * self.width;
-                if let Some(&nxt_cost) = solve.map.get(&next) {
-                    if nxt_cost + speedup + jump + state.cost <= solve.length {
+                let y= y as usize;
+
+                let next = x + y * self.width;
+                if let Some(&to_start) = solution.to_start.get(&next) {
+                    if to_start + speedup + dx.unsigned_abs() + dy.unsigned_abs() + state.cost <= solution.length {
                         cut += 1;
                     }
                 }
@@ -77,8 +83,8 @@ impl Maze {
         cut
     }
 
-    fn shortest_fwd_path(&self) -> Solve {
-        let mut costs: HashMap<usize, usize> = Default::default();
+    fn shortest_fwd_path(&self) -> Solution {
+        let mut visited: HashMap<usize, usize> = Default::default();
         let mut queue: VecDeque<State> = Default::default();
         queue.push_back(State {
             cost: 0,
@@ -90,27 +96,27 @@ impl Maze {
         while let Some(state) = queue.pop_front() {
             // Alternatively we could have continued to find all shortest paths
             if state.position == self.end {
-                costs.insert(state.position, state.cost);
-                return Solve {
+                visited.insert(state.position, state.cost);
+                return Solution {
                     length: state.cost,
-                    map: costs,
+                    to_start: visited,
                 };
             }
 
             // Important as we may have already found a better way
-            if let Some(&cost) = costs.get(&state.position) {
+            if let Some(&cost) = visited.get(&state.position) {
                 if state.cost >= cost {
                     continue;
                 }
             }
             // Relaxation, we have now found a better way
-            costs.insert(state.position, state.cost);
+            visited.insert(state.position, state.cost);
 
             // For each node we can reach, see if we can find a way with
             // a lower cost going through this node
             for next in self.nhbrs(&state) {
                 // If so, add it to the frontier and continue
-                match costs.get(&next.position) {
+                match visited.get(&next.position) {
                     None => {
                         queue.push_back(next);
                     }
@@ -122,13 +128,13 @@ impl Maze {
                 }
             }
         }
-        Solve {
+        Solution {
             length: 0,
-            map: Default::default(),
+            to_start: Default::default(),
         }
     }
 
-    fn shortest_bkwd_path(&self, solve: &Solve, speedup: usize, cheat: usize) -> usize {
+    fn shortest_bkwd_path(&self, solve: &Solution, speedup: usize, cheat: usize) -> usize {
         let mut queue: VecDeque<State> = Default::default();
         let mut visited: HashSet<usize> = Default::default();
         let mut shortcuts = 0;
