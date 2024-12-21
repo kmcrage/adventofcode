@@ -1,4 +1,4 @@
-use hashbrown::{HashMap, HashSet};
+use hashbrown::HashMap;
 use itertools::Itertools;
 use std::fs::read_to_string;
 
@@ -80,6 +80,7 @@ fn is_tree(robots: &[Robot], coord: usize) -> bool {
     rows.values().sorted().last().unwrap() > &cnt
 }
 
+/* 
 fn print_robots(robots: &[Robot], size: (isize, isize)) {
     let pos: HashSet<[isize; 2]> = HashSet::from_iter(robots.iter().map(|r| r.pos));
     for j in 0..size.1 {
@@ -93,6 +94,7 @@ fn print_robots(robots: &[Robot], size: (isize, isize)) {
         println!(" ");
     }
 }
+*/
 
 fn part1(robots: &[Robot], size: (isize, isize), steps: usize) -> usize {
     let mut robots: Vec<Robot> = robots.to_vec();
@@ -131,7 +133,6 @@ fn part2(robots: &[Robot], size: (isize, isize)) -> usize {
             while crt % col_p.unwrap() != col.unwrap() {
                 crt += row_p.unwrap();
             } 
-            print_robots(&robots,size);
             break crt;
         }
     }
