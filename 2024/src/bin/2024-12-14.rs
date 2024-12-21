@@ -67,28 +67,17 @@ fn safety_factor(robots: &[Robot], size: (isize, isize)) -> usize {
     quads.iter().product()
 }
 
-fn is_tree(robots: &[Robot]) -> bool {
+fn is_tree(robots: &[Robot], coord: usize) -> bool {
     let cnt = (robots.len() as f64).sqrt() as usize;
     let mut rows: HashMap<isize, usize> = Default::default();
-    let mut cols: HashMap<isize, usize> = Default::default();
     for robot in robots {
-        rows.entry(robot.pos[0])
+        rows.entry(robot.pos[coord])
             .and_modify(|r| {
                 *r += 1;
             })
             .or_insert(1);
-        cols.entry(robot.pos[1])
-            .and_modify(|c| {
-                *c += 1;
-            })
-            .or_insert(1);
     }
-    if rows.values().sorted().last().unwrap() > &cnt
-        && cols.values().sorted().last().unwrap() > &cnt
-    {
-        return true;
-    }
-    false
+    rows.values().sorted().last().unwrap() > &cnt
 }
 
 fn print_robots(robots: &[Robot], size: (isize, isize)) {
@@ -116,12 +105,34 @@ fn part1(robots: &[Robot], size: (isize, isize), steps: usize) -> usize {
 fn part2(robots: &[Robot], size: (isize, isize)) -> usize {
     let mut robots: Vec<Robot> = robots.to_vec();
     let mut steps: usize = 0;
+    let mut row: Option<usize> = None;
+    let mut col: Option<usize> = None;
+    let mut row_p: Option<usize> = None;
+    let mut col_p: Option<usize> = None;
     loop {
         robots = robots.iter().map(|&r| r.step(size)).collect();
         steps += 1;
-        if is_tree(&robots) {
-            print_robots(&robots, size);
-            return steps;
+        if is_tree(&robots, 0) {
+            if row.is_none() {
+                row = Some(steps);
+            } else {
+                row_p = Some(steps - row.unwrap());
+            }
+        }
+        if is_tree(&robots, 1) {
+            if col.is_none() {
+                col = Some(steps);
+            } else {
+                col_p = Some(steps - col.unwrap());
+            }
+        }
+        if row_p.is_some() && col_p.is_some() {
+            let mut crt = row.unwrap();
+            while crt % col_p.unwrap() != col.unwrap() {
+                crt += row_p.unwrap();
+            } 
+            print_robots(&robots,size);
+            break crt;
         }
     }
 }
