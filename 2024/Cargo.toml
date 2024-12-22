@@ -8,6 +8,7 @@ edition = "2021"
 binary-heap-plus = "0.5.0"
 hashbrown = { version = "0.15.2", features = ["rayon"] }
 itertools = "0.13.0"
+memoize = "0.4.2"
 num = "0.4.3"
 rayon = "1.10.0"
 regex = "1.11.1"
