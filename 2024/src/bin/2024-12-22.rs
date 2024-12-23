@@ -1,4 +1,3 @@
-use hashbrown::HashMap;
 use std::fs::read_to_string;
 
 fn compute(secret: i64) -> i64 {
@@ -9,40 +8,26 @@ fn compute(secret: i64) -> i64 {
     result
 }
 
-fn get_bananas(line: &str) -> HashMap<i64, i64> {
+fn get_bananas(line: &str, bananas: &mut [i64]) {
     let seed = line.parse::<i64>().unwrap();
-    let mut secrets: Vec<i64> = vec![seed];
-    let mut diffs: Vec<i64> = Default::default();
-    let mut bananas: HashMap<i64, i64> = Default::default();
-    for _ in 0..2000 {
-        let next = compute(secrets[secrets.len() - 1]);
-        secrets.push(next);
-        diffs.push(next % 10 - secrets[secrets.len() - 2] % 10);
-
-        if diffs.len() > 3 {
-            // convert to a number since d+10 in 0..19
-            let hint = diffs.iter().rev().take(4).copied().fold(0, |a, d| a*20 +(d+10));
-            bananas
-                .entry(hint)
-                .or_insert(secrets[secrets.len() - 1] % 10);
+    let mut secrets = (seed, seed);
+    let mut seen = [false; 160_000];
+    let mut hint = 0_usize;
+    for i in 0..2000 {
+        secrets = (compute(secrets.0), secrets.0);
+        let diff =  secrets.0 % 10 - secrets.1 % 10;
+        hint = hint / 20 + 8000 * (10 + diff) as usize; // 8000 == 20 ** 3
+        if i > 3 && !seen[hint] {
+            bananas[hint] += secrets.0 % 10;
+            seen[hint] = true;
         }
     }
-    bananas
 }
 
 fn part2(input: &str) -> i64 {
-    let mut bananas: HashMap<i64, i64> = Default::default();
-    for line in input.lines() {
-        let b = get_bananas(line);
-        for (hint, &value) in b.iter() {
-            bananas
-                .entry(*hint)
-                .and_modify(|b| *b += value)
-                .or_insert(value);
-        }
-    }
-
-    bananas.values().copied().max().unwrap()
+    let mut bananas: [i64; 160000] = [0; 160_000];
+    input.lines().for_each(|line| {get_bananas(line, &mut bananas)});
+    bananas.iter().copied().max().unwrap()
 }
 
 fn part1(input: &str) -> i64 {
