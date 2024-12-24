@@ -76,9 +76,17 @@ algorithm BronKerbosch1(R, P, X) is
         P := P \ {v}
         X := X ⋃ {v}
 
+algorithm BronKerbosch2(R, P, X) is
+    if P and X are both empty then
+        report R as a maximal clique
+    choose a pivot vertex u in P ⋃ X
+    for each vertex v in P \ N(u) do
+        BronKerbosch2(R ⋃ {v}, P ⋂ N(v), X ⋂ N(v))
+        P := P \ {v}
+        X := X ⋃ {v}
 */
 
-fn bron_kerbosch1<'a>(
+fn bron_kerbosch2<'a>(
     network: &'a Network,
     r: HashSet<&'a str>,
     mut p: HashSet<&'a str>,
@@ -91,12 +99,13 @@ fn bron_kerbosch1<'a>(
         }
         return;
     }
-    
-    let nodes = p.iter().cloned().collect::<HashSet<&str>>();
-    nodes.iter().for_each(|v| {
+
+    let nodes = p.clone();
+    let pivot = *p.union(&x).max_by_key(|&&v| network[v].len()).unwrap();
+    nodes.difference(&network[pivot]).for_each(|v| {
         let nhbd_v = network.get(v).unwrap();
         let v_set = HashSet::from([*v]);
-        bron_kerbosch1(
+        bron_kerbosch2(
             network,
             r.union(&v_set).cloned().collect(),
             p.intersection(nhbd_v).cloned().collect(),
@@ -113,11 +122,11 @@ fn maximal_clique(network: &Network) -> String {
     let p = HashSet::from_iter(network.keys().cloned());
     let x = HashSet::new();
     let mut cliques: Vec<HashSet<&str>> = Default::default();
-    bron_kerbosch1(network, r, p, x, &mut cliques);
+    bron_kerbosch2(network, r, p, x, &mut cliques);
 
-    cliques.sort_by_key(|c| c.len());
     let mut maximal = cliques
-        .last()
+        .iter()
+        .max_by_key(|c| c.len())
         .unwrap()
         .into_iter()
         .cloned()
