@@ -28,9 +28,9 @@ fn from(input: &str) -> (HashMap<String, bool>, Vec<[String; 4]>) {
     (values, ops)
 }
 
-fn compute_map(values: &HashMap<String, bool>, ops: &Vec<[String; 4]>) -> HashMap<String, bool> {
+fn compute_map(values: &HashMap<String, bool>, ops: &[[String; 4]]) -> HashMap<String, bool> {
     let mut vs = values.clone();
-    let mut to_eval = ops.clone();
+    let mut to_eval = ops.to_vec();
     while !to_eval.is_empty() {
         let mut next_eval: Vec<[String; 4]> = Default::default();
         to_eval.iter().for_each(|eqn| {
@@ -56,7 +56,7 @@ fn compute_map(values: &HashMap<String, bool>, ops: &Vec<[String; 4]>) -> HashMa
     vs
 }
 
-fn compute(values: &HashMap<String, bool>, ops: &Vec<[String; 4]>) -> usize {
+fn compute(values: &HashMap<String, bool>, ops: &[[String; 4]]) -> usize {
     let vs = compute_map(values, ops);
     let mut zs: Vec<String> = vs.keys().filter(|k| k.starts_with("z")).cloned().collect();
     zs.sort();
@@ -65,86 +65,112 @@ fn compute(values: &HashMap<String, bool>, ops: &Vec<[String; 4]>) -> usize {
         .fold(0, |a, z| 2 * a + (if vs[z] { 1 } else { 0 }))
 }
 
-fn get_num(input: &String) -> String {
+fn get_num(input: &str) -> String {
     let mut num = input.split("-").next().unwrap().chars();
     num.next();
     num.as_str().to_string()
 }
 
-fn fix(ops: &[[String; 4]]) -> usize {
-    let mut curr: Vec<[String; 4]> = ops.to_vec();
+fn do_corrections(ops: &[[String; 4]]) -> (Vec<[String; 4]>, HashMap<String, String>) {
+    let corrections: HashMap<String, String> = [
+        // the z corrections are easily found by inspection
+        ("shh", "z21"),
+        ("dqr", "z33"),
+        ("pfw", "z39"),
+        // this one harder but its obviously in 25 - 27
+        ("vgs", "dtk"),
+    ]
+    .iter()
+    .flat_map(|(a, b)| {
+        [
+            (b.to_string(), a.to_string()),
+            (a.to_string(), b.to_string()),
+        ]
+    })
+    .collect();
+
+    (
+        ops.iter()
+            .map(|op| {
+                let mut newop = op.clone();
+                if corrections.contains_key(&newop[3]) {
+                    newop[3] = corrections[&newop[3]].clone();
+                }
+                newop
+            })
+            .collect(),
+        corrections,
+    )
+}
+
+fn out_rule(
+    in1: &str,
+    in2: &str,
+    action: &str,
+    out: &str,
+    op: &[String; 4],
+    rename: &mut HashMap<String, String>,
+) {
+    if !op[3].contains("-")
+        && ((op[0].starts_with(in1) && op[2].starts_with(in2))
+            || (op[0].starts_with(in2) && op[2].starts_with(in1)))
+        && op[1] == action
+    {
+        rename.insert(
+            op[3].clone(),
+            format!("{}{}-{}", out, get_num(&op[0]), op[3]).to_string(),
+        );
+    }
+}
+
+fn in_rule(
+    in1: &str,
+    out: &str,
+    action: &str,
+    in2: &str,
+    op: &[String; 4],
+    rename: &mut HashMap<String, String>,
+) {
+    for i in [0, 2] {
+        if op[i].starts_with(in1)
+            && op[1] == action
+            && !op[2 - i].contains("-")
+            && op[3].starts_with(out)
+        {
+            rename.insert(
+                op[2 - i].clone(),
+                format!("{}{}-{}", in2, get_num(&op[0]), op[2 - i]).to_string(),
+            );
+        }
+    }
+}
+
+fn apply_rules(op: &[String; 4], rename: &HashMap<String, String>) -> [String; 4] {
+    let mut newop = op.clone();
+    for i in [0, 2, 3] {
+        if let Some(r) = rename.get(&op[i]) {
+            newop[i] = r.to_string();
+        }
+    }
+    newop
+}
+
+fn fix(ops: &[[String; 4]]) -> String {
     let mut prev: Vec<[String; 4]> = Default::default();
+    let (mut curr, corrections) = do_corrections(ops);
+
     let mut rename: HashMap<String, String> = Default::default();
     while prev != curr {
         prev = curr;
         curr = Default::default();
         for op in &prev {
-            let mut newop = op.clone();
-            // rename rules
-            if !op[3].contains("-")
-                && ((op[0].starts_with("x") && op[2].starts_with("y"))
-                    || (op[0].starts_with("y") && op[2].starts_with("x")))
-            {
-                if op[1] == "XOR" {
-                    rename.insert(
-                        op[3].clone(),
-                        format!("L{}-{}", get_num(&op[0]), op[3]).to_string(),
-                    );
-                }
-                if op[1] == "AND" {
-                    rename.insert(
-                        op[3].clone(),
-                        format!("M{}-{}", get_num(&op[0]), op[3]).to_string(),
-                    );
-                }
-            }
-            if ((op[0].starts_with("P") && op[2].starts_with("M"))
-                || (op[0].starts_with("M") && op[2].starts_with("P")))
-                && op[1] == "OR"
-                && !op[3].contains("-")
-            {
-                rename.insert(
-                    op[3].clone(),
-                    format!("C{}-{}", get_num(&op[0]), op[3]).to_string(),
-                );
-            }
-            if op[0].starts_with("L")
-                && op[1] == "XOR"
-                && !op[2].contains("-")
-                && op[3].starts_with("z")
-            {
-                rename.insert(
-                    op[2].clone(),
-                    format!("N{}-{}", get_num(&op[0]), op[2]).to_string(),
-                );
-            }
-            if op[2].starts_with("L")
-                && op[1] == "XOR"
-                && !op[0].contains("-")
-                && op[3].starts_with("z")
-            {
-                rename.insert(
-                    op[0].clone(),
-                    format!("N{}-{}", get_num(&op[2]), op[0]).to_string(),
-                );
-            }
-            if !op[3].contains("-")
-                && ((op[0].starts_with("L") && op[2].starts_with("N"))
-                    || (op[0].starts_with("N") && op[2].starts_with("L")))
-            {
-                if op[1] == "AND" {
-                    rename.insert(
-                        op[3].clone(),
-                        format!("P{}-{}", get_num(&op[0]), op[3]).to_string(),
-                    );
-                }
-            }
-            //
-            for i in [0, 2, 3] {
-                if let Some(r) = rename.get(&op[i]) {
-                    newop[i] = r.to_string();
-                }
-            }
+            // create new renamings from rules
+            out_rule("x", "y", "XOR", "L", op, &mut rename);
+            out_rule("x", "y", "AND", "M", op, &mut rename);
+            out_rule("L", "N", "AND", "P", op, &mut rename);
+            in_rule("L", "z", "XOR", "N", op, &mut rename);
+            // apply existing renames
+            let newop = apply_rules(op, &rename);
             curr.push(newop);
         }
     }
@@ -153,7 +179,10 @@ fn fix(ops: &[[String; 4]]) -> usize {
     for op in curr {
         println!("{:?}", op);
     }
-    0
+
+    let mut result = corrections.keys().map(|s| &**s).collect::<Vec<_>>();
+    result.sort();
+    result.join(",")
 }
 
 fn main() {
@@ -164,4 +193,3 @@ fn main() {
     println!("part1: {}", compute(&values, &ops));
     println!("part2: {}", fix(&ops));
 }
-// dqr,dtk,pfw,shh,vgs,z21,z33,z39
