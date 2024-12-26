@@ -71,9 +71,39 @@ fn get_num(input: &String) -> String {
     num.as_str().to_string()
 }
 
-fn fix(ops: &[[String; 4]]) -> usize {
+fn fix(ops: &[[String; 4]]) -> String {
     let mut curr: Vec<[String; 4]> = ops.to_vec();
     let mut prev: Vec<[String; 4]> = Default::default();
+    let corrections: HashMap<String, String> = [
+        // the z corrections are easily found by inspection
+        ("shh", "z21"),
+        ("z21", "shh"),
+        ("dqr", "z33"),
+        ("z33", "dqr"),
+        ("pfw", "z39"),
+        ("z39", "pfw"),
+        // these two are harder but its obviously in 25, 26, 27
+        ("vgs", "dtk"),
+        ("dtk", "vgs"),
+
+    ]
+    .iter()
+    .map(|(f, t)| (f.to_string(), t.to_string()))
+    .collect();
+
+    curr = curr
+        .iter()
+        .map(|op| {
+            let mut newop = op.clone();
+            for i in [0, 2, 3] {
+                if corrections.contains_key(&newop[i]) {
+                    newop[i] = corrections[&newop[i]].clone();
+                }
+            }
+            newop
+        })
+        .collect();
+
     let mut rename: HashMap<String, String> = Default::default();
     while prev != curr {
         prev = curr;
@@ -128,16 +158,12 @@ fn fix(ops: &[[String; 4]]) -> usize {
                     format!("N{}-{}", get_num(&op[2]), op[0]).to_string(),
                 );
             }
-            if !op[3].contains("-")
-                && ((op[0].starts_with("L") && op[2].starts_with("N"))
-                    || (op[0].starts_with("N") && op[2].starts_with("L")))
-            {
-                if op[1] == "AND" {
-                    rename.insert(
-                        op[3].clone(),
-                        format!("P{}-{}", get_num(&op[0]), op[3]).to_string(),
-                    );
-                }
+            if !op[3].contains("-") && ((op[0].starts_with("L") && op[2].starts_with("N"))
+                    || (op[0].starts_with("N") && op[2].starts_with("L"))) && op[1] == "AND" {
+                rename.insert(
+                    op[3].clone(),
+                    format!("P{}-{}", get_num(&op[0]), op[3]).to_string(),
+                );
             }
             //
             for i in [0, 2, 3] {
@@ -153,7 +179,10 @@ fn fix(ops: &[[String; 4]]) -> usize {
     for op in curr {
         println!("{:?}", op);
     }
-    0
+    
+    let mut result = corrections.keys().map(|s| &**s).collect::<Vec<_>>();
+    result.sort();
+    result.join(",")
 }
 
 fn main() {
