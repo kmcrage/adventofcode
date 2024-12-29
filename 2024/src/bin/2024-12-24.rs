@@ -125,16 +125,6 @@ fn fix(ops: &[[String; 4]]) -> String {
                     );
                 }
             }
-            if ((op[0].starts_with("P") && op[2].starts_with("M"))
-                || (op[0].starts_with("M") && op[2].starts_with("P")))
-                && op[1] == "OR"
-                && !op[3].contains("-")
-            {
-                rename.insert(
-                    op[3].clone(),
-                    format!("C{}-{}", get_num(&op[0]), op[3]).to_string(),
-                );
-            }
             if op[0].starts_with("L")
                 && op[1] == "XOR"
                 && !op[2].contains("-")
