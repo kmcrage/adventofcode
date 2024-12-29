@@ -82,10 +82,9 @@ fn fix(ops: &[[String; 4]]) -> String {
         ("z33", "dqr"),
         ("pfw", "z39"),
         ("z39", "pfw"),
-        // these two are harder but its obviously in 25, 26, 27
+        // these two are harder but its obviously in 25 - 27
         ("vgs", "dtk"),
         ("dtk", "vgs"),
-
     ]
     .iter()
     .map(|(f, t)| (f.to_string(), t.to_string()))
@@ -95,10 +94,8 @@ fn fix(ops: &[[String; 4]]) -> String {
         .iter()
         .map(|op| {
             let mut newop = op.clone();
-            for i in [0, 2, 3] {
-                if corrections.contains_key(&newop[i]) {
-                    newop[i] = corrections[&newop[i]].clone();
-                }
+            if corrections.contains_key(&newop[3]) {
+                newop[3] = corrections[&newop[3]].clone();
             }
             newop
         })
@@ -155,11 +152,14 @@ fn fix(ops: &[[String; 4]]) -> String {
             {
                 rename.insert(
                     op[0].clone(),
-                    format!("N{}-{}", get_num(&op[2]), op[0]).to_string(),
+                    format!("N{}-{}", get_num(&op[3]), op[0]).to_string(),
                 );
             }
-            if !op[3].contains("-") && ((op[0].starts_with("L") && op[2].starts_with("N"))
-                    || (op[0].starts_with("N") && op[2].starts_with("L"))) && op[1] == "AND" {
+            if !op[3].contains("-")
+                && ((op[0].starts_with("L") && op[2].starts_with("N"))
+                    || (op[0].starts_with("N") && op[2].starts_with("L")))
+                && op[1] == "AND"
+            {
                 rename.insert(
                     op[3].clone(),
                     format!("P{}-{}", get_num(&op[0]), op[3]).to_string(),
@@ -179,7 +179,7 @@ fn fix(ops: &[[String; 4]]) -> String {
     for op in curr {
         println!("{:?}", op);
     }
-    
+
     let mut result = corrections.keys().map(|s| &**s).collect::<Vec<_>>();
     result.sort();
     result.join(",")
