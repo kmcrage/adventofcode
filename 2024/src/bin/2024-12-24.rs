@@ -124,7 +124,7 @@ fn in_rule(
         {
             rename.insert(
                 op[2 - i].clone(),
-                format!("{}{}-{}", in2, get_num(&op[0]), op[2 - i]).to_string(),
+                format!("{}{}-{}", in2, get_num(&op[i]), op[2 - i]).to_string(),
             );
         }
     }
@@ -149,7 +149,7 @@ fn fix(ops: &[[String; 4]]) -> String {
         // this one harder but its obviously in 25 - 27
         ("vgs", "dtk"),
     ];
-    
+
     let mut prev: Vec<[String; 4]> = Default::default();
     let mut curr = do_corrections(ops, &corrections);
 
