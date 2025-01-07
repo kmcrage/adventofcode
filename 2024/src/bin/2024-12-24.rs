@@ -71,36 +71,21 @@ fn get_num(input: &str) -> String {
     num.as_str().to_string()
 }
 
-fn do_corrections(ops: &[[String; 4]]) -> (Vec<[String; 4]>, HashMap<String, String>) {
-    let corrections: HashMap<String, String> = [
-        // the z corrections are easily found by inspection
-        ("shh", "z21"),
-        ("dqr", "z33"),
-        ("pfw", "z39"),
-        // this one harder but its obviously in 25 - 27
-        ("vgs", "dtk"),
-    ]
-    .iter()
-    .flat_map(|(a, b)| {
-        [
-            (b.to_string(), a.to_string()),
-            (a.to_string(), b.to_string()),
-        ]
-    })
-    .collect();
+fn do_corrections(ops: &[[String; 4]], corrections: &[(&str, &str)]) -> Vec<[String; 4]> {
+    let corrections: HashMap<&str, &str> = corrections
+        .iter()
+        .flat_map(|(a, b)| [(*b, *a), (*a, *b)])
+        .collect();
 
-    (
-        ops.iter()
-            .map(|op| {
-                let mut newop = op.clone();
-                if corrections.contains_key(&newop[3]) {
-                    newop[3] = corrections[&newop[3]].clone();
-                }
-                newop
-            })
-            .collect(),
-        corrections,
-    )
+    ops.iter()
+        .map(|op| {
+            let mut newop = op.clone();
+            if corrections.contains_key(newop[3].as_str()) {
+                newop[3] = corrections[newop[3].as_str()].to_string();
+            }
+            newop
+        })
+        .collect()
 }
 
 fn out_rule(
@@ -156,8 +141,17 @@ fn apply_rules(op: &[String; 4], rename: &HashMap<String, String>) -> [String; 4
 }
 
 fn fix(ops: &[[String; 4]]) -> String {
+    let corrections = [
+        // the z corrections are easily found by inspection
+        ("shh", "z21"),
+        ("dqr", "z33"),
+        ("pfw", "z39"),
+        // this one harder but its obviously in 25 - 27
+        ("vgs", "dtk"),
+    ];
+    
     let mut prev: Vec<[String; 4]> = Default::default();
-    let (mut curr, corrections) = do_corrections(ops);
+    let mut curr = do_corrections(ops, &corrections);
 
     let mut rename: HashMap<String, String> = Default::default();
     while prev != curr {
@@ -180,7 +174,10 @@ fn fix(ops: &[[String; 4]]) -> String {
         println!("{:?}", op);
     }
 
-    let mut result = corrections.keys().map(|s| &**s).collect::<Vec<_>>();
+    let mut result = corrections
+        .iter()
+        .flat_map(|(a, b)| [a.to_string(), b.to_string()])
+        .collect::<Vec<_>>();
     result.sort();
     result.join(",")
 }
