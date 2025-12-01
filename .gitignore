@@ -4,3 +4,4 @@ dist-newstyle
 *.dat
 perf.data
 *.svg
+*.vscode
