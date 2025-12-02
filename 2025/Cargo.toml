@@ -5,3 +5,5 @@ authors = ["kevin <kevin.campbellrage@gmail.com>"]
 edition = "2021"
 
 [dependencies]
+itertools = "0.14.0"
+substring = "1.4.5"
