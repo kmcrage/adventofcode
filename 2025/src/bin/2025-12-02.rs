@@ -27,14 +27,13 @@ fn part2(range: &str) -> i64 {
     for i in from..=to {
         let istr = i.to_string();
         let len = istr.len();
-        for m in 1..=(len / 2) {
-            if !len.is_multiple_of(m) {
-                continue;
-            }
-            if (m..len).step_by(m).all(|k| istr[0..m] == istr[k..k + m]) {
-                cnt += i;
-                break;
-            }
+
+        if (1..=(len / 2)).filter(|&l| len.is_multiple_of(l)).any(|l| {
+            (l..len)
+                .step_by(l)
+                .all(|idx| istr[0..l] == istr[idx..idx + l])
+        }) {
+            cnt += i;
         }
     }
     cnt
@@ -52,5 +51,3 @@ fn main() {
     let part2: i64 = input.split(',').map(part2).sum();
     println!("part2: {part2}");
 }
-//1227775554
-//4174379265
