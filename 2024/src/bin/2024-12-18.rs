@@ -59,7 +59,7 @@ impl Memory {
 
             if (nxt_pos / self.width == 0)
                 || (nxt_pos / self.width == self.width - 1)
-                || (nxt_pos % self.width == 0)
+                || nxt_pos.is_multiple_of(self.width)
                 || (nxt_pos % self.width == self.width - 1)
             {
                 continue;

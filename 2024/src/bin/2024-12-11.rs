@@ -26,7 +26,7 @@ fn updated(stone: usize) -> Vec<usize> {
         updates.push(1);
     } else {
         let digits = stone.ilog10() as usize + 1;
-        if digits % 2 == 0 {
+        if digits.is_multiple_of(2) {
             let md = pow(10, digits / 2);
             updates.push(stone / md);
             updates.push(stone % md);

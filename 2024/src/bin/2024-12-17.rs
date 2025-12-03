@@ -57,10 +57,9 @@ fn run_program(origin: &[usize; 3], program: &[usize]) -> Vec<usize> {
         } else if opcode == 7 {
             state[2] = state[0] / pow(2, combo(&state, operand));
         }
-        if nxt_ptr.is_some() {
-            ptr = nxt_ptr.unwrap();
-        } else {
-            ptr += 2;
+        match nxt_ptr {
+            Some(n_p) => ptr = n_p,
+            _ => ptr += 2
         }
     }
     out

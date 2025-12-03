@@ -80,7 +80,7 @@ fn is_tree(robots: &[Robot], coord: usize) -> bool {
     rows.values().sorted().last().unwrap() > &cnt
 }
 
-/* 
+/*
 fn print_robots(robots: &[Robot], size: (isize, isize)) {
     let pos: HashSet<[isize; 2]> = HashSet::from_iter(robots.iter().map(|r| r.pos));
     for j in 0..size.1 {
@@ -115,25 +115,26 @@ fn part2(robots: &[Robot], size: (isize, isize)) -> usize {
         robots = robots.iter().map(|&r| r.step(size)).collect();
         steps += 1;
         if is_tree(&robots, 0) {
-            if row.is_none() {
-                row = Some(steps);
-            } else {
-                row_p = Some(steps - row.unwrap());
+            match row {
+                Some(r) => row_p = Some(steps - r),
+                _ => row = Some(steps),
             }
         }
         if is_tree(&robots, 1) {
-            if col.is_none() {
-                col = Some(steps);
-            } else {
-                col_p = Some(steps - col.unwrap());
+            match col {
+                Some(c) => col_p = Some(steps - c),
+                _ => col = Some(steps),
             }
         }
-        if row_p.is_some() && col_p.is_some() {
-            let mut crt = row.unwrap();
-            while crt % col_p.unwrap() != col.unwrap() {
-                crt += row_p.unwrap();
-            } 
-            break crt;
+        match (col_p, row_p) {
+            (Some(c), Some(r)) => {
+                let mut crt = row.unwrap();
+                while crt % c != col.unwrap() {
+                    crt += r;
+                }
+                break crt;
+            }
+            _ => continue
         }
     }
 }
