@@ -9,22 +9,20 @@ fn parse_range(range: &str) -> (i64, i64) {
 fn part1(range: &str) -> i64 {
     let (from, to) = parse_range(range);
 
-    let mut cnt = 0;
-    for i in from..=to {
+    (from..=to).fold(0, |cnt, i| -> i64 {
         let len = i.ilog10() + 1;
         let m = 10_i64.pow(len / 2);
         if i / m == i % m {
-            cnt += i;
+            return cnt + i;
         }
-    }
-    cnt
+        cnt
+    })
 }
 
 fn part2(range: &str) -> i64 {
     let (from, to) = parse_range(range);
 
-    let mut cnt = 0;
-    for i in from..=to {
+    (from..=to).fold(0, |cnt, i| -> i64 {
         let istr = i.to_string();
         let len = istr.len();
 
@@ -33,10 +31,10 @@ fn part2(range: &str) -> i64 {
                 .step_by(l)
                 .all(|idx| istr[0..l] == istr[idx..idx + l])
         }) {
-            cnt += i;
+            return cnt + i;
         }
-    }
-    cnt
+        cnt
+    })
 }
 
 fn main() {
