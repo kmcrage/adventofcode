@@ -1,4 +1,14 @@
-use std::fs::read_to_string;
+use std::{
+    cmp::{max, min},
+    fs::read_to_string,
+};
+
+type Split = (u32, u32); // (#digits in target number, #digits in repeated substring)
+
+// repeats x2; other repeats; duplicates (the biggest numbers are ten digits)
+const DOUBLES: [Split; 5] = [(2, 1), (4, 2), (6, 3), (8, 4), (10, 5)];
+const REPEATS: [Split; 6] = [(3, 1), (5, 1), (6, 2), (7, 1), (9, 3), (10, 2)];
+const DUPLICATES: [Split; 2] = [(6, 1), (10, 1)];
 
 fn parse_range(range: &str) -> (i64, i64) {
     let (from, to) = range.split_once('-').unwrap();
@@ -6,35 +16,38 @@ fn parse_range(range: &str) -> (i64, i64) {
     (from.parse::<i64>().unwrap(), to.parse::<i64>().unwrap())
 }
 
-fn part1(range: &str) -> i64 {
-    let (from, to) = parse_range(range);
+fn repeats(from: i64, to: i64, len: u32, digits: u32) -> i64 {
+    let mut start = max(from / 10_i64.pow(len - digits), 10_i64.pow(digits - 1));
+    let mut end = min(to / 10_i64.pow(len - digits), 10_i64.pow(digits) - 1);
 
-    (from..=to).fold(0, |cnt, i| -> i64 {
-        let len = i.ilog10() + 1;
-        let m = 10_i64.pow(len / 2);
-        if i / m == i % m {
-            return cnt + i;
-        }
-        cnt
-    })
+    let mut scale = 1;
+    (1..(len / digits)).for_each(|_| {
+        scale = scale * 10_i64.pow(digits) + 1;
+    });
+
+    if start * scale < from {
+        start += 1;
+    }
+    if end * scale > to {
+        end -= 1;
+    }
+    // sanity check
+    if start > end || from > start * scale || end * scale > to {
+        return 0;
+    }
+    (end * (end + 1) - start * (start - 1)) * scale / 2
 }
 
-fn part2(range: &str) -> i64 {
-    let (from, to) = parse_range(range);
-
-    (from..=to).fold(0, |cnt, i| -> i64 {
-        let istr = i.to_string();
-        let len = istr.len();
-
-        if (1..=(len / 2)).filter(|&l| len.is_multiple_of(l)).any(|l| {
-            (l..len)
-                .step_by(l)
-                .all(|idx| istr[0..l] == istr[idx..idx + l])
-        }) {
-            return cnt + i;
-        }
-        cnt
-    })
+fn repetitions(splits: &[Split], input: &str) -> i64 {
+    input
+        .split(',')
+        .map(|range| {
+            let (from, to) = parse_range(range);
+            splits
+                .iter()
+                .fold(0, |cnt, (len, dgts)| cnt + repeats(from, to, *len, *dgts))
+        })
+        .sum()
 }
 
 fn main() {
@@ -43,9 +56,9 @@ fn main() {
 
     let input = read_to_string(file).unwrap();
 
-    let part1: i64 = input.split(',').map(part1).sum();
+    let part1: i64 = repetitions(&DOUBLES, &input);
     println!("part1: {part1}");
 
-    let part2: i64 = input.split(',').map(part2).sum();
+    let part2: i64 = part1 + repetitions(&REPEATS, &input) - repetitions(&DUPLICATES, &input);
     println!("part2: {part2}");
 }
