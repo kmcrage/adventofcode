@@ -3,12 +3,12 @@ use std::{
     fs::read_to_string,
 };
 
-type Split = (u32, u32); // (#digits in target number, #digits in repeated substring)
-
-// repeats x2; other repeats; duplicates (the biggest numbers are ten digits)
-const DOUBLES: [Split; 5] = [(2, 1), (4, 2), (6, 3), (8, 4), (10, 5)];
-const REPEATS: [Split; 6] = [(3, 1), (5, 1), (6, 2), (7, 1), (9, 3), (10, 2)];
-const DUPLICATES: [Split; 2] = [(6, 1), (10, 1)];
+#[derive(Debug)]
+struct Pattern {
+    length: u32,
+    digits: u32,
+    multiplier: i64,
+}
 
 fn parse_range(range: &str) -> (i64, i64) {
     let (from, to) = range.split_once('-').unwrap();
@@ -16,13 +16,19 @@ fn parse_range(range: &str) -> (i64, i64) {
     (from.parse::<i64>().unwrap(), to.parse::<i64>().unwrap())
 }
 
-fn repeats(from: i64, to: i64, len: u32, digits: u32) -> i64 {
-    let mut start = max(from / 10_i64.pow(len - digits), 10_i64.pow(digits - 1));
-    let mut end = min(to / 10_i64.pow(len - digits), 10_i64.pow(digits) - 1);
+fn repeats(from: i64, to: i64, pattern: &Pattern) -> i64 {
+    let mut start = max(
+        from / 10_i64.pow(pattern.length - pattern.digits),
+        10_i64.pow(pattern.digits - 1),
+    );
+    let mut end = min(
+        to / 10_i64.pow(pattern.length - pattern.digits),
+        10_i64.pow(pattern.digits) - 1,
+    );
 
     let mut scale = 1;
-    (1..(len / digits)).for_each(|_| {
-        scale = scale * 10_i64.pow(digits) + 1;
+    (1..(pattern.length / pattern.digits)).for_each(|_| {
+        scale = scale * 10_i64.pow(pattern.digits) + 1;
     });
 
     if start * scale < from {
@@ -38,16 +44,67 @@ fn repeats(from: i64, to: i64, len: u32, digits: u32) -> i64 {
     (end * (end + 1) - start * (start - 1)) * scale / 2
 }
 
-fn repetitions(splits: &[Split], input: &str) -> i64 {
+fn repetitions(splits: &[Pattern], input: &str) -> i64 {
     input
         .split(',')
         .map(|range| {
             let (from, to) = parse_range(range);
-            splits
-                .iter()
-                .fold(0, |cnt, (len, dgts)| cnt + repeats(from, to, *len, *dgts))
+            splits.iter().fold(0, |cnt, pattern| {
+                cnt + pattern.multiplier * repeats(from, to, pattern)
+            })
         })
         .sum()
+}
+
+fn max_length(input: &str) -> u32 {
+    input
+        .split(',')
+        .map(|r| r.split('-').next_back().unwrap().len())
+        .max()
+        .unwrap() as u32
+}
+
+fn patterns(max: u32) -> Vec<Pattern> {
+    let mut result = Vec::new();
+    for length in 2..=max {
+        let mut result_len : Vec<Pattern>= Vec::new();
+        for digits in (1..length).rev().filter(|&d|length.is_multiple_of(d)) {
+            let multiplier = 1 - result_len
+                .iter()
+                .filter(|p| p.digits.is_multiple_of(digits))
+                .map(|p| p.multiplier)
+                .sum::<i64>();
+            if multiplier != 0 {
+                result_len.push(Pattern {
+                    length,
+                    digits,
+                    multiplier,
+                });
+            }
+        }
+        result.extend(result_len);
+    }
+
+    result
+}
+
+fn part1(input: &str) -> i64 {
+    let max_len = max_length(input);
+    let patterns: Vec<Pattern> = (2..=max_len)
+        .step_by(2)
+        .map(|l| Pattern {
+            length: l,
+            digits: l / 2,
+            multiplier: 1,
+        })
+        .collect();
+    repetitions(&patterns, input)
+}
+
+fn part2(input: &str) -> i64 {
+    let max_len = max_length(input);
+    let patterns = patterns(max_len);
+    repetitions(&patterns, input)
 }
 
 fn main() {
@@ -56,9 +113,6 @@ fn main() {
 
     let input = read_to_string(file).unwrap();
 
-    let part1: i64 = repetitions(&DOUBLES, &input);
-    println!("part1: {part1}");
-
-    let part2: i64 = part1 + repetitions(&REPEATS, &input) - repetitions(&DUPLICATES, &input);
-    println!("part2: {part2}");
+    println!("part1: {}", part1(&input));
+    println!("part2: {}", part2(&input));
 }
