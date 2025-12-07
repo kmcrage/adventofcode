@@ -5,9 +5,15 @@ use std::{
 
 #[derive(Debug)]
 struct Pattern {
-    length: u32,
+    repeats: u32,
     digits: u32,
     multiplier: i64,
+}
+
+impl Pattern {
+    fn length(&self) -> u32{
+        self.repeats * self.digits
+    }
 }
 
 fn parse_range(range: &str) -> (i64, i64) {
@@ -18,16 +24,16 @@ fn parse_range(range: &str) -> (i64, i64) {
 
 fn repeats(from: i64, to: i64, pattern: &Pattern) -> i64 {
     let mut start = max(
-        from / 10_i64.pow(pattern.length - pattern.digits),
+        from / 10_i64.pow(pattern.length() - pattern.digits),
         10_i64.pow(pattern.digits - 1),
     );
     let mut end = min(
-        to / 10_i64.pow(pattern.length - pattern.digits),
+        to / 10_i64.pow(pattern.length() - pattern.digits),
         10_i64.pow(pattern.digits) - 1,
     );
 
     let mut scale = 1;
-    (1..(pattern.length / pattern.digits)).for_each(|_| {
+    (1..pattern.repeats).for_each(|_| {
         scale = scale * 10_i64.pow(pattern.digits) + 1;
     });
 
@@ -76,7 +82,7 @@ fn patterns(max: u32) -> Vec<Pattern> {
                 .sum::<i64>();
             if multiplier != 0 {
                 result_len.push(Pattern {
-                    length,
+                    repeats: length/digits,
                     digits,
                     multiplier,
                 });
@@ -93,7 +99,7 @@ fn part1(input: &str) -> i64 {
     let patterns: Vec<Pattern> = (2..=max_len)
         .step_by(2)
         .map(|l| Pattern {
-            length: l,
+            repeats: 2,
             digits: l / 2,
             multiplier: 1,
         })

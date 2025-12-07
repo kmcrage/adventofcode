@@ -6,26 +6,23 @@ fn part1(input: &str) -> i64 {
         .map(|line| line.split_whitespace().collect())
         .collect();
 
-    let mut nums = Vec::new();
-    for i in 0..cols[0].len() {
-        let mut ns: Vec<i64> = Vec::new();
-        for row in cols.iter().take(cols.len() - 1) {
-            let num = row[i].parse::<i64>().unwrap();
-            ns.push(num);
-        }
-        nums.push(ns);
-    }
+    let nums: Vec<Vec<i64>> = (0..cols[0].len())
+        .map(|i| {
+            cols.iter()
+                .take(cols.len() - 1)
+                .map(|row| row[i].parse::<i64>().unwrap())
+                .collect()
+        })
+        .collect();
 
-    let mut sum = 0;
-    for i in 0..cols[0].len() {
-        let op = cols[cols.len() - 1][i];
-        if op == "*" {
-            sum += nums[i].iter().product::<i64>();
-        } else {
-            sum += nums[i].iter().sum::<i64>();
-        }
-    }
-    sum
+    cols[cols.len() - 1]
+        .iter()
+        .enumerate()
+        .map(|(i, op)| match op {
+            &"*" => nums[i].iter().product::<i64>(),
+            _ => nums[i].iter().sum::<i64>(),
+        })
+        .sum()
 }
 
 fn part2(input: &str) -> i64 {
@@ -55,22 +52,19 @@ fn part2(input: &str) -> i64 {
         }
     }
 
-    let mut sum = 0;
     let ops: Vec<_> = input
         .lines()
         .next_back()
         .unwrap()
         .split_whitespace()
         .collect();
-    for i in 0..ops.len() {
-        let op = ops[i];
-        if op == "*" {
-            sum += vnums[i].iter().product::<i64>();
-        } else {
-            sum += vnums[i].iter().sum::<i64>();
-        }
-    }
-    sum
+    ops.iter()
+        .enumerate()
+        .map(|(i, op)| match op {
+            &"*" => vnums[i].iter().product::<i64>(),
+            _ => vnums[i].iter().sum::<i64>(),
+        })
+        .sum::<i64>()
 }
 
 fn main() {
