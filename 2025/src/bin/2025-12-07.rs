@@ -54,7 +54,7 @@ fn part2(splitters: &HashSet<(i32, i32)>) -> i64 {
     let start = *splitters.iter().find(|(i, _)| *i == 0).unwrap();
 
     let mut cache = HashMap::new();
-    num_paths(start, i_max, &splitters, &mut cache)
+    num_paths(start, i_max, splitters, &mut cache)
 }
 
 fn parse(input: &str) -> HashSet<(i32, i32)> {
@@ -70,11 +70,51 @@ fn parse(input: &str) -> HashSet<(i32, i32)> {
         .collect()
 }
 
+fn combi(input: &str) -> (i64, i64) {
+    let start: Vec<i64> = input
+        .lines()
+        .next()
+        .unwrap()
+        .chars()
+        .map(|c| if c == 'S' { 1 } else { 0 })
+        .collect();
+    let num_cols = start.len();
+
+    // (number of splitters, final state of the beams)
+    let result = input
+        .lines()
+        .skip(1)
+        .fold((0, start), |(mut num_splitters, beams), line| {
+            let mut next = vec![0_i64; num_cols];
+            line.chars()
+                .zip(beams)
+                .enumerate()
+                .for_each(|(i, (chr, beam))| {
+                    if beam == 0 {
+                        return;
+                    }
+                    match chr {
+                        '.' => next[i] += beam,
+                        '^' => {
+                            next[i - 1] += beam;
+                            next[i + 1] += beam;
+                            num_splitters += 1;
+                        }
+                        _ => panic!("bad char at {i}: {chr}"),
+                    }
+                });
+            (num_splitters, next)
+        });
+
+    (result.0, result.1.iter().sum())
+}
+
 fn main() {
     let input = read_to_string("./inputs/2025-12-07.txt").unwrap();
-    // let input = read_to_string("./inputs/example.txt").unwrap();
+    //let input = read_to_string("./inputs/example.txt").unwrap();
 
     let splitters = parse(&input);
     println!("part1: {}", part1(&splitters));
     println!("part2: {}", part2(&splitters));
+    println!("combi: {:?}", combi(&input));
 }
