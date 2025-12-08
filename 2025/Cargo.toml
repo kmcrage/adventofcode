@@ -5,6 +5,7 @@ authors = ["kevin <kevin.campbellrage@gmail.com>"]
 edition = "2021"
 
 [dependencies]
+binary-heap-plus = "0.5.0"
 hashbrown = "0.16.1"
 itertools = "0.14.0"
 memoize = "0.5.1"

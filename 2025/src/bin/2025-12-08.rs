@@ -1,34 +1,39 @@
+use binary_heap_plus::{BinaryHeap, MinComparator};
 use hashbrown::{HashMap, HashSet};
 use itertools::Itertools;
 use std::fs::read_to_string;
 
 type Point = (i64, i64, i64);
+type Pairs = BinaryHeap<(i64, Point, Point), MinComparator>;
 
 fn dist(x: &Point, y: &Point) -> i64 {
     (x.0 - y.0) * (x.0 - y.0) + (x.1 - y.1) * (x.1 - y.1) + (x.2 - y.2) * (x.2 - y.2)
 }
 
-fn part1(pairs: &[(i64, Point, Point)], num: usize) -> usize {
+fn part1(pairs: &Pairs, num: usize) -> usize {
     let mut connections: HashMap<Point, Vec<Point>> = HashMap::new();
-    for (_, start, end) in pairs.iter().take(num) {
-        if let Some(v) = connections.get_mut(start) {
-            v.push(*end);
+
+    for (_, start, end) in pairs.clone().into_iter_sorted().take(num) {
+        if let Some(v) = connections.get_mut(&start) {
+            v.push(end);
         } else {
-            let v = vec![*end];
-            connections.insert(*start, v);
+            let v = vec![end];
+            connections.insert(start, v);
         }
-        if let Some(v) = connections.get_mut(end) {
-            v.push(*start);
+        if let Some(v) = connections.get_mut(&end) {
+            v.push(start);
         } else {
-            let v = vec![*start];
-            connections.insert(*end, v);
+            let v = vec![start];
+            connections.insert(end, v);
         }
     }
 
-    let mut sizes = Vec::new();
+    let mut sizes: BinaryHeap<usize> = BinaryHeap::new();
+    let mut circuit: HashSet<Point> = HashSet::new();
+    let mut queue;
     while !connections.is_empty() {
-        let mut queue = vec![*connections.keys().next().unwrap()];
-        let mut circuit: HashSet<Point> = HashSet::new();
+        queue = vec![*connections.keys().next().unwrap()];
+        circuit.clear();
         while let Some(pt) = queue.pop() {
             if circuit.contains(&pt) {
                 continue;
@@ -39,12 +44,10 @@ fn part1(pairs: &[(i64, Point, Point)], num: usize) -> usize {
         }
         sizes.push(circuit.len());
     }
-    sizes.sort();
-    sizes.reverse();
-    sizes[0..3].iter().product()
+    sizes.into_iter_sorted().take(3).product()
 }
 
-fn parse(input: &str) -> Vec<(i64, Point, Point)> {
+fn parse(input: &str) -> Pairs {
     let junctions: Vec<Point> = input
         .lines()
         .flat_map(|line| {
@@ -54,7 +57,7 @@ fn parse(input: &str) -> Vec<(i64, Point, Point)> {
         })
         .collect();
 
-    let mut pairs: Vec<(i64, Point, Point)> = junctions
+    let pairs = junctions
         .iter()
         .enumerate()
         .flat_map(|(i, start)| {
@@ -65,37 +68,39 @@ fn parse(input: &str) -> Vec<(i64, Point, Point)> {
                 .collect::<Vec<_>>()
         })
         .collect();
-    pairs.sort();
-    pairs
+    BinaryHeap::from_vec(pairs)
 }
 
-fn part2(pairs: &[(i64, Point, Point)]) -> i64 {
+fn part2(pairs: &Pairs) -> i64 {
+    let pairs_len = pairs.len();
+    let mut pairs = pairs.clone();
+
     let mut connections: HashMap<Point, Vec<Point>> = HashMap::new();
     let mut circuit: HashSet<Point> = HashSet::new();
-    for (_, start, end) in pairs.iter() {
-        if let Some(v) = connections.get_mut(start) {
-            v.push(*end);
+    while let Some((_, start, end)) = pairs.pop() {
+        if let Some(v) = connections.get_mut(&start) {
+            v.push(end);
         } else {
-            let v = vec![*end];
-            connections.insert(*start, v);
+            let v = vec![end];
+            connections.insert(start, v);
         }
-        if let Some(v) = connections.get_mut(end) {
-            v.push(*start);
+        if let Some(v) = connections.get_mut(&end) {
+            v.push(start);
         } else {
-            let v = vec![*start];
-            connections.insert(*end, v);
+            let v = vec![start];
+            connections.insert(end, v);
         }
 
         // this hasn't got enough connections to connect everything
-        if connections.len() * (connections.len() - 1) < 2 * pairs.len() {
+        if connections.len() * (connections.len() - 1) < 2 * pairs_len {
             continue;
         }
         // the new connection doesn't add to the circuit
-        if !circuit.is_empty() && !circuit.contains(start) && !circuit.contains(end){
+        if !circuit.is_empty() && !circuit.contains(&start) && !circuit.contains(&end) {
             continue;
         }
-          
-        let mut queue = vec![*start, *end];
+
+        let mut queue = vec![start, end];
 
         while let Some(pt) = queue.pop() {
             if circuit.contains(&pt) {
@@ -104,7 +109,7 @@ fn part2(pairs: &[(i64, Point, Point)]) -> i64 {
             circuit.insert(pt);
             queue.extend(connections.get(&pt).unwrap());
         }
-        if circuit.len() * (circuit.len() - 1) == 2 * pairs.len() {
+        if circuit.len() * (circuit.len() - 1) == 2 * pairs_len {
             return start.0 * end.0;
         }
     }
