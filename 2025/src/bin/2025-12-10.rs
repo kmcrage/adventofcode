@@ -1,6 +1,6 @@
-use good_lp::solvers::highs::highs;
-use good_lp::*;
+use good_lp::{highs, Expression, IntoAffineExpression, Solution, SolverModel, variable, variables};
 use hashbrown::HashSet;
+use std::cmp::min;
 use std::collections::VecDeque;
 use std::fs::read_to_string;
 
@@ -75,6 +75,36 @@ fn part1(input: &str) -> usize {
         .sum()
 }
 
+fn part1a(input: &str) -> usize {
+    input
+        .lines()
+        .map(|line| {
+            let (target, buttons, _) = parse(line);
+            let mut min_cost = usize::MAX;
+            for sol in 1..2_usize.pow(buttons.len() as u32) {
+                if sol.count_ones() as usize >= min_cost {
+                    continue;
+                }
+
+                let mut soln = sol;
+                let mut lights = (0..target.len()).map(|_| false).collect::<Vec<_>>();
+                for button in &buttons {
+                    if !soln.is_multiple_of(2) {
+                        for &light in button.iter() {
+                            lights[light] = !lights[light];
+                        }
+                    }
+                    soln /= 2;
+                }
+                if lights == target {
+                    min_cost = min(min_cost, sol.count_ones() as usize);
+                }
+            }
+            min_cost
+        })
+        .sum()
+}
+
 fn solve_ilp(buttons: &[Vec<usize>], joltages: &[usize]) -> usize {
     let mut vars = variables!();
     let press_vars = (0..buttons.len())
@@ -92,7 +122,10 @@ fn solve_ilp(buttons: &[Vec<usize>], joltages: &[usize]) -> usize {
         problem.add_constraint(e.eq(j as f64));
     }
     let sol = problem.solve().unwrap();
-    press_vars.iter().map(|&v| sol.value(v).round() as usize).sum() 
+    press_vars
+        .iter()
+        .map(|&v| sol.value(v).round() as usize)
+        .sum()
 }
 
 fn part2(input: &str) -> usize {
@@ -106,9 +139,10 @@ fn part2(input: &str) -> usize {
 }
 
 fn main() {
-    //let input = read_to_string("./inputs/example.txt").unwrap();
+    // let input = read_to_string("./inputs/example.txt").unwrap();
     let input = read_to_string("./inputs/2025-12-10.txt").unwrap();
 
     println!("part1: {:?}", part1(&input));
+    println!("part1a: {:?}", part1a(&input));
     println!("part2: {:?}", part2(&input));
 }
