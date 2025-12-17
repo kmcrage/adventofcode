@@ -1,15 +1,10 @@
-use binary_heap_plus::{BinaryHeap, MinComparator};
-use hashbrown::HashSet;
-use rayon::iter::*;
+use hashbrown::HashMap;
 use std::cmp::min;
 use std::fs::read_to_string;
+use rayon::iter::{ParallelBridge, ParallelIterator};
 
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
-struct State {
-    joltages: Vec<usize>,
-    cost: usize,
-    multiplier: usize,
-}
+type CacheTP = HashMap<Vec<bool>, Vec<(usize, Vec<usize>)>>;
+type CacheJ = HashMap<Vec<usize>, usize>;
 
 fn parse(input: &str) -> (Vec<bool>, Vec<Vec<usize>>, Vec<usize>) {
     let tokens = input.split_whitespace().collect::<Vec<_>>();
@@ -41,6 +36,7 @@ fn parse(input: &str) -> (Vec<bool>, Vec<Vec<usize>>, Vec<usize>) {
 fn part1(input: &str) -> usize {
     input
         .lines()
+        .par_bridge()
         .map(|line| {
             let (target, buttons, _) = parse(line);
             let mut min_cost = usize::MAX;
@@ -68,76 +64,77 @@ fn part1(input: &str) -> usize {
         .sum()
 }
 
-fn solutions(buttons: &[Vec<usize>], target_len: usize) -> Vec<(usize, Vec<usize>, Vec<bool>)> {
+fn target_presses(
+    target: &[bool],
+    buttons: &[Vec<usize>],
+    cache: &mut CacheTP,
+) -> Vec<(usize, Vec<usize>)> {
+    let key = target.to_vec();
+    if cache.contains_key(&key) {
+        return cache[&key].clone();
+    }
+
     let mut result = Vec::new();
     for sol in 0..2_usize.pow(buttons.len() as u32) {
         let mut soln = sol;
-        let mut joltage = vec![0_usize; target_len];
+        let mut presses = (0..target.len()).map(|_| 0_usize).collect::<Vec<_>>();
         for button in buttons {
             if !soln.is_multiple_of(2) {
                 for &light in button.iter() {
-                    joltage[light] += 1;
+                    presses[light] += 1;
                 }
             }
             soln /= 2;
         }
-        result.push((sol.count_ones() as usize, joltage.clone(), to_binary(&joltage)));
+        if presses
+            .iter()
+            .map(|j| !j.is_multiple_of(2))
+            .zip(target)
+            .any(|(j, t)| j != *t)
+        {
+            continue;
+        }
+        result.push((sol.count_ones() as usize, presses));
     }
+    cache.insert(key, result.clone());
     result
 }
 
-fn to_binary(vec: &[usize]) -> Vec<bool> {
-    vec.iter().map(|j| !j.is_multiple_of(2)).collect::<Vec<_>>()
-}
+fn solve_recursive(
+    buttons: &[Vec<usize>],
+    joltages: &[usize],
+    cache_tp: &mut CacheTP,
+    cache: &mut CacheJ,
+) -> usize {
+    let key = joltages.to_vec();
+    if cache.contains_key(&key) {
+        return cache[&key];
+    }
+    if joltages.iter().all(|j| *j == 0) {
+        cache.insert(key, 0);
+        return 0;
+    }
 
-fn solve_astar(buttons: &[Vec<usize>], joltages: &[usize]) -> usize {
-    let start = State {
-        joltages: joltages.to_vec(),
-        cost: 0,
-        multiplier: 1,
-    };
-
-    let mut seen: HashSet<Vec<usize>> = HashSet::new();
-    let mut queue: BinaryHeap<(usize, State), MinComparator> = BinaryHeap::from_vec(vec![]);
-    queue.push((0, start));
-    let solutions = solutions(buttons, joltages.len());
-    while let Some((_, current)) = queue.pop() {
-        if current.joltages.iter().sum::<usize>() == 0 {
-            return current.cost;
-        }
-        if seen.contains(&current.joltages) {
+    let target = joltages
+        .iter()
+        .map(|j| !j.is_multiple_of(2))
+        .collect::<Vec<_>>();
+    let mut min_cost = usize::MAX / 3;
+    for (cst, presses) in target_presses(&target, buttons, cache_tp) {
+        if presses.iter().zip(joltages).any(|(a, b)| a > b) {
             continue;
         }
-        seen.insert(current.joltages.clone());
 
-        let target = to_binary(&current.joltages);
-
-        for (cost, jolts,_) in solutions.iter().filter(|s| s.2 == target) {
-            if jolts.iter().zip(&current.joltages).any(|(dj, j)| dj > j) {
-                continue;
-            }
-            let next_joltages = current
-                .joltages
-                .iter()
-                .zip(jolts)
-                .map(|(&j, dj)| (j - dj) / 2)
-                .collect::<Vec<_>>();
-
-            let next_state = State {
-                joltages: next_joltages.clone(),
-                cost: current.cost + current.multiplier * cost,
-                multiplier: current.multiplier * 2,
-            };
-            if seen.contains(&next_state.joltages) {
-                continue;
-            }
-
-            let est_cost =
-                next_state.cost + next_state.multiplier * next_joltages.iter().max().unwrap();
-            queue.push((est_cost, next_state));
-        }
+        let next_joltages = joltages
+            .iter()
+            .zip(presses)
+            .map(|(j, d)| (j - d) / 2)
+            .collect::<Vec<_>>();
+        let cost = cst + 2 * solve_recursive(buttons, &next_joltages, cache_tp, cache);
+        min_cost = min(min_cost, cost);
     }
-    0
+    cache.insert(key, min_cost);
+    min_cost
 }
 
 fn part2(input: &str) -> usize {
@@ -146,7 +143,9 @@ fn part2(input: &str) -> usize {
         .par_bridge()
         .map(|line| {
             let (_, buttons, joltages) = parse(line);
-            solve_astar(&buttons, &joltages)
+            let mut cache_tp = HashMap::new();
+            let mut cache_j = HashMap::new();
+            solve_recursive(&buttons, &joltages, &mut cache_tp, &mut cache_j)
         })
         .sum()
 }
